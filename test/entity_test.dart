@@ -7,22 +7,25 @@ void main() {
     test('Customer should be created with required fields', () {
       final customer = Customer(
         name: 'John Doe',
-        email: 'john@example.com',
         phone: '1234567890',
+        address: '123 Main St',
+        notes: 'VIP customer',
       );
 
       expect(customer.name, 'John Doe');
-      expect(customer.email, 'john@example.com');
       expect(customer.phone, '1234567890');
+      expect(customer.address, '123 Main St');
+      expect(customer.notes, 'VIP customer');
     });
 
     test('Customer should convert to and from map', () {
       final customer = Customer(
         id: 1,
         name: 'John Doe',
-        email: 'john@example.com',
         createdAt: DateTime(2024, 1, 1),
         updatedAt: DateTime(2024, 1, 1),
+        address: '123 Main St',
+        notes: 'Preferred contact: phone',
       );
 
       final map = customer.toMap();
@@ -30,7 +33,8 @@ void main() {
 
       expect(customerFromMap.id, customer.id);
       expect(customerFromMap.name, customer.name);
-      expect(customerFromMap.email, customer.email);
+      expect(customerFromMap.address, customer.address);
+      expect(customerFromMap.notes, customer.notes);
     });
   });
 

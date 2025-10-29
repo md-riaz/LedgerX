@@ -1,10 +1,11 @@
+import 'dart:io';
+
+import 'package:csv/csv.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../domain/entities/customer.dart';
-import '../controllers/customer_controller.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:csv/csv.dart';
+import 'package:ledgerx/domain/entities/customer.dart';
+import 'package:ledgerx/presentation/controllers/customer_controller.dart';
 
 class CustomerListPage extends StatelessWidget {
   const CustomerListPage({super.key});
@@ -82,13 +83,18 @@ class CustomerListPage extends StatelessWidget {
                       ),
                       title: Text(customer.name),
                       subtitle: Text(
-                        customer.email ?? customer.phone ?? 'No contact info',
+                        customer.phone ??
+                            customer.address ??
+                            customer.notes ??
+                            'No additional details',
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, controller, customer),
+                        onPressed: () =>
+                            _confirmDelete(context, controller, customer),
                       ),
-                      onTap: () => _showCustomerDetails(context, controller, customer),
+                      onTap: () =>
+                          _showCustomerDetails(context, controller, customer),
                     ),
                   );
                 },
@@ -104,11 +110,12 @@ class CustomerListPage extends StatelessWidget {
     );
   }
 
-  void _showAddCustomerDialog(BuildContext context, CustomerController controller) {
+  void _showAddCustomerDialog(
+      BuildContext context, CustomerController controller) {
     final nameController = TextEditingController();
-    final emailController = TextEditingController();
     final phoneController = TextEditingController();
     final addressController = TextEditingController();
+    final notesController = TextEditingController();
 
     Get.dialog(
       AlertDialog(
@@ -123,15 +130,6 @@ class CustomerListPage extends StatelessWidget {
                   labelText: 'Name *',
                   hintText: 'Enter customer name',
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Enter email address',
-                ),
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextField(
@@ -151,6 +149,15 @@ class CustomerListPage extends StatelessWidget {
                 ),
                 maxLines: 2,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(
+                  labelText: 'Notes',
+                  hintText: 'Additional information',
+                ),
+                maxLines: 3,
+              ),
             ],
           ),
         ),
@@ -164,9 +171,15 @@ class CustomerListPage extends StatelessWidget {
               if (nameController.text.isNotEmpty) {
                 final customer = Customer(
                   name: nameController.text,
-                  email: emailController.text.isEmpty ? null : emailController.text,
-                  phone: phoneController.text.isEmpty ? null : phoneController.text,
-                  address: addressController.text.isEmpty ? null : addressController.text,
+                  phone: phoneController.text.isEmpty
+                      ? null
+                      : phoneController.text,
+                  address: addressController.text.isEmpty
+                      ? null
+                      : addressController.text,
+                  notes: notesController.text.isEmpty
+                      ? null
+                      : notesController.text,
                 );
                 controller.createCustomer(customer);
               }
@@ -178,7 +191,8 @@ class CustomerListPage extends StatelessWidget {
     );
   }
 
-  void _showCustomerDetails(BuildContext context, CustomerController controller, Customer customer) {
+  void _showCustomerDetails(
+      BuildContext context, CustomerController controller, Customer customer) {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(16),
@@ -208,8 +222,11 @@ class CustomerListPage extends StatelessWidget {
                         customer.name,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      if (customer.email != null)
-                        Text(customer.email!, style: Theme.of(context).textTheme.bodyMedium),
+                      if (customer.phone != null)
+                        Text(
+                          customer.phone!,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                     ],
                   ),
                 ),
@@ -229,6 +246,14 @@ class CustomerListPage extends StatelessWidget {
                 leading: const Icon(Icons.location_on),
                 title: const Text('Address'),
                 subtitle: Text(customer.address!),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+            if (customer.notes != null && customer.notes!.isNotEmpty) ...[
+              ListTile(
+                leading: const Icon(Icons.note),
+                title: const Text('Notes'),
+                subtitle: Text(customer.notes!),
                 contentPadding: EdgeInsets.zero,
               ),
             ],
@@ -256,7 +281,8 @@ class CustomerListPage extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, CustomerController controller, Customer customer) {
+  void _confirmDelete(
+      BuildContext context, CustomerController controller, Customer customer) {
     Get.dialog(
       AlertDialog(
         title: const Text('Delete Customer'),
@@ -294,21 +320,48 @@ class CustomerListPage extends StatelessWidget {
         if (fields.isEmpty) return;
 
         // Skip header row if it exists
-        int startIndex = 1;
-        if (fields[0].any((field) => field.toString().toLowerCase().contains('name'))) {
-          startIndex = 1;
-        } else {
-          startIndex = 0;
+        var startIndex = 0;
+        var nameIndex = 0;
+        var phoneIndex = -1;
+        var addressIndex = -1;
+        var notesIndex = -1;
+
+        if (fields.isNotEmpty) {
+          final headerRow = fields.first
+              .map((field) => field.toString().toLowerCase())
+              .toList();
+          final hasHeader = headerRow.any((value) => value.contains('name'));
+
+          if (hasHeader) {
+            startIndex = 1;
+            nameIndex = headerRow.indexWhere((value) => value.contains('name'));
+            phoneIndex =
+                headerRow.indexWhere((value) => value.contains('phone'));
+            addressIndex =
+                headerRow.indexWhere((value) => value.contains('address'));
+            notesIndex =
+                headerRow.indexWhere((value) => value.contains('note'));
+          } else {
+            phoneIndex = fields[0].length > 1 ? 1 : -1;
+            addressIndex = fields[0].length > 2 ? 2 : -1;
+            notesIndex = fields[0].length > 3 ? 3 : -1;
+          }
         }
 
         for (int i = startIndex; i < fields.length; i++) {
           final row = fields[i];
           if (row.isNotEmpty) {
             final customer = Customer(
-              name: row[0].toString(),
-              email: row.length > 1 ? row[1].toString() : null,
-              phone: row.length > 2 ? row[2].toString() : null,
-              address: row.length > 3 ? row[3].toString() : null,
+              name: row[nameIndex].toString(),
+              phone: phoneIndex != -1 && phoneIndex < row.length
+                  ? row[phoneIndex].toString()
+                  : null,
+              address: addressIndex != -1 && addressIndex < row.length
+                  ? row[addressIndex].toString()
+                  : null,
+              notes: notesIndex != -1 && notesIndex < row.length
+                  ? row[notesIndex].toString()
+                  : null,
             );
             await controller.createCustomer(customer);
           }
@@ -335,23 +388,23 @@ class CustomerListPage extends StatelessWidget {
     try {
       final customers = controller.customers;
       final List<List<dynamic>> rows = [
-        ['Name', 'Email', 'Phone', 'Address'],
+        ['Name', 'Phone', 'Address', 'Notes'],
       ];
 
       for (var customer in customers) {
         rows.add([
           customer.name,
-          customer.email ?? '',
           customer.phone ?? '',
           customer.address ?? '',
+          customer.notes ?? '',
         ]);
       }
 
-      final csv = const ListToCsvConverter().convert(rows);
-      
+      final csvData = const ListToCsvConverter().convert(rows);
+
       Get.snackbar(
         'Export',
-        'CSV export will be available soon. Data prepared for ${customers.length} customers.',
+        'CSV export will be available soon. Prepared ${customers.length} customers (${csvData.length} characters).',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {

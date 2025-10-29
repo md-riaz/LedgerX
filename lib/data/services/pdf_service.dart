@@ -1,9 +1,9 @@
+import 'package:intl/intl.dart';
+import 'package:ledgerx/domain/entities/customer.dart';
+import 'package:ledgerx/domain/entities/entry.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:intl/intl.dart';
-import '../../domain/entities/customer.dart';
-import '../../domain/entities/entry.dart';
 
 class PdfService {
   Future<void> generateInvoice({
@@ -13,7 +13,7 @@ class PdfService {
   }) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('MMM dd, yyyy');
-    
+
     // Calculate totals
     double totalCredit = 0;
     double totalDebit = 0;
@@ -59,9 +59,12 @@ class PdfService {
           ),
           pw.SizedBox(height: 10),
           pw.Text('Name: ${customer.name}'),
-          if (customer.email != null) pw.Text('Email: ${customer.email}'),
-          if (customer.phone != null) pw.Text('Phone: ${customer.phone}'),
-          if (customer.address != null) pw.Text('Address: ${customer.address}'),
+          if ((customer.phone?.isNotEmpty ?? false))
+            pw.Text('Phone: ${customer.phone}'),
+          if ((customer.address?.isNotEmpty ?? false))
+            pw.Text('Address: ${customer.address}'),
+          if ((customer.notes?.isNotEmpty ?? false))
+            pw.Text('Notes: ${customer.notes}'),
           pw.SizedBox(height: 20),
           pw.Text(
             'Transaction Details',
@@ -71,14 +74,16 @@ class PdfService {
             ),
           ),
           pw.SizedBox(height: 10),
-          pw.Table.fromTextArray(
+          pw.TableHelper.fromTextArray(
             headers: ['Date', 'Type', 'Description', 'Amount'],
-            data: entries.map((entry) => [
-              dateFormat.format(entry.date),
-              entry.type.name.toUpperCase(),
-              entry.description ?? '-',
-              '\$${entry.amount.toStringAsFixed(2)}',
-            ]).toList(),
+            data: entries
+                .map((entry) => [
+                      dateFormat.format(entry.date),
+                      entry.type.name.toUpperCase(),
+                      entry.description ?? '-',
+                      '\$${entry.amount.toStringAsFixed(2)}',
+                    ])
+                .toList(),
             headerStyle: pw.TextStyle(
               fontWeight: pw.FontWeight.bold,
               fontSize: 12,
@@ -164,7 +169,11 @@ class PdfService {
             final entries = entriesByCustomer[customer.id] ?? [];
             final balance = entries.fold<double>(
               0,
-              (sum, entry) => sum + (entry.type == EntryType.credit ? entry.amount : -entry.amount),
+              (sum, entry) =>
+                  sum +
+                  (entry.type == EntryType.credit
+                      ? entry.amount
+                      : -entry.amount),
             );
 
             return pw.Column(
@@ -198,14 +207,16 @@ class PdfService {
                 ),
                 pw.SizedBox(height: 10),
                 if (entries.isNotEmpty)
-                  pw.Table.fromTextArray(
+                  pw.TableHelper.fromTextArray(
                     headers: ['Date', 'Type', 'Amount', 'Description'],
-                    data: entries.map((entry) => [
-                      dateFormat.format(entry.date),
-                      entry.type.name.toUpperCase(),
-                      '\$${entry.amount.toStringAsFixed(2)}',
-                      entry.description ?? '-',
-                    ]).toList(),
+                    data: entries
+                        .map((entry) => [
+                              dateFormat.format(entry.date),
+                              entry.type.name.toUpperCase(),
+                              '\$${entry.amount.toStringAsFixed(2)}',
+                              entry.description ?? '-',
+                            ])
+                        .toList(),
                     cellStyle: const pw.TextStyle(fontSize: 9),
                     headerStyle: pw.TextStyle(
                       fontWeight: pw.FontWeight.bold,
@@ -213,11 +224,12 @@ class PdfService {
                     ),
                   )
                 else
-                  pw.Text('No entries', style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text('No entries',
+                      style: const pw.TextStyle(fontSize: 10)),
                 pw.SizedBox(height: 20),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );

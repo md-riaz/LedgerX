@@ -48,7 +48,8 @@ class EntryListPage extends StatelessWidget {
                 Obx(() {
                   if (controller.selectedCustomerId.value != null) {
                     return FutureBuilder<double>(
-                      future: controller.getBalance(controller.selectedCustomerId.value!),
+                      future: controller
+                          .getBalance(controller.selectedCustomerId.value!),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           final balance = snapshot.data!;
@@ -56,7 +57,8 @@ class EntryListPage extends StatelessWidget {
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Balance:',
@@ -148,7 +150,8 @@ class EntryListPage extends StatelessWidget {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (entry.description != null) Text(entry.description!),
+                          if (entry.description != null)
+                            Text(entry.description!),
                           Text(
                             DateFormat('MMM dd, yyyy').format(entry.date),
                             style: const TextStyle(fontSize: 12),
@@ -172,7 +175,8 @@ class EntryListPage extends StatelessWidget {
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, controller, entry),
+                        onPressed: () =>
+                            _confirmDelete(context, controller, entry),
                       ),
                       onTap: () => _showEntryDetails(context, entry),
                     ),
@@ -184,7 +188,8 @@ class EntryListPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEntryDialog(context, controller, customerController),
+        onPressed: () =>
+            _showAddEntryDialog(context, controller, customerController),
         child: const Icon(Icons.add),
       ),
     );
@@ -209,16 +214,17 @@ class EntryListPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Obx(() => DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(labelText: 'Customer *'),
-                    value: selectedCustomerId.value,
-                    items: customerController.customers.map((customer) {
-                      return DropdownMenuItem(
-                        value: customer.id,
-                        child: Text(customer.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) => selectedCustomerId.value = value,
+              Obx(() => DropdownMenu<int>(
+                    label: const Text('Customer *'),
+                    initialSelection: selectedCustomerId.value,
+                    dropdownMenuEntries: customerController.customers
+                        .where((customer) => customer.id != null)
+                        .map((customer) => DropdownMenuEntry<int>(
+                              value: customer.id!,
+                              label: customer.name,
+                            ))
+                        .toList(),
+                    onSelected: (value) => selectedCustomerId.value = value,
                   )),
               const SizedBox(height: 16),
               Obx(() => SegmentedButton<EntryType>(
@@ -247,7 +253,8 @@ class EntryListPage extends StatelessWidget {
                   hintText: 'Enter amount',
                   prefixText: '\$ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -269,7 +276,8 @@ class EntryListPage extends StatelessWidget {
               const SizedBox(height: 16),
               Obx(() => ListTile(
                     title: const Text('Date'),
-                    subtitle: Text(DateFormat('MMM dd, yyyy').format(selectedDate.value)),
+                    subtitle: Text(
+                        DateFormat('MMM dd, yyyy').format(selectedDate.value)),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
                       final date = await showDatePicker(
@@ -293,7 +301,8 @@ class EntryListPage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              if (amountController.text.isNotEmpty && selectedCustomerId.value != null) {
+              if (amountController.text.isNotEmpty &&
+                  selectedCustomerId.value != null) {
                 final entry = Entry(
                   customerId: selectedCustomerId.value!,
                   type: selectedType.value,
@@ -304,7 +313,10 @@ class EntryListPage extends StatelessWidget {
                   date: selectedDate.value,
                   tags: tagsController.text.isEmpty
                       ? []
-                      : tagsController.text.split(',').map((e) => e.trim()).toList(),
+                      : tagsController.text
+                          .split(',')
+                          .map((e) => e.trim())
+                          .toList(),
                 );
                 controller.createEntry(entry);
               }
@@ -348,12 +360,13 @@ class EntryListPage extends StatelessWidget {
                     children: [
                       Text(
                         '\$${entry.amount.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: entry.type == EntryType.credit
-                                  ? AppTheme.creditColor
-                                  : AppTheme.debitColor,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: entry.type == EntryType.credit
+                                      ? AppTheme.creditColor
+                                      : AppTheme.debitColor,
+                                ),
                       ),
                       Text(
                         entry.type.name.toUpperCase(),
@@ -388,7 +401,8 @@ class EntryListPage extends StatelessWidget {
                   children: entry.tags
                       .map((tag) => Chip(
                             label: Text(tag),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
                           ))
                       .toList(),
                 ),
@@ -411,11 +425,13 @@ class EntryListPage extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, EntryController controller, Entry entry) {
+  void _confirmDelete(
+      BuildContext context, EntryController controller, Entry entry) {
     Get.dialog(
       AlertDialog(
         title: const Text('Delete Entry'),
-        content: Text('Are you sure you want to delete this entry of \$${entry.amount.toStringAsFixed(2)}?'),
+        content: Text(
+            'Are you sure you want to delete this entry of \$${entry.amount.toStringAsFixed(2)}?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),

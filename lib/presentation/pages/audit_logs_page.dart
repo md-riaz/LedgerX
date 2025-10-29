@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../domain/entities/audit_log.dart';
-import '../../data/repositories/audit_repository_impl.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:ledgerx/data/repositories/audit_repository_impl.dart';
+import 'package:ledgerx/domain/entities/audit_log.dart';
 
 class AuditLogsPage extends StatelessWidget {
   const AuditLogsPage({super.key});
