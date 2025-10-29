@@ -91,8 +91,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'customers',
-      where: 'name LIKE ? OR email LIKE ? OR phone LIKE ?',
-      whereArgs: ['%$query%', '%$query%', '%$query%'],
+      where: 'name LIKE ? OR phone LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
       orderBy: 'name ASC',
     );
     return List.generate(maps.length, (i) => Customer.fromMap(maps[i]));

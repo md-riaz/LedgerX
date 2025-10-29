@@ -16,8 +16,8 @@ A sample CSV file with 10 customers that you can use to test the import function
 
 **Format:**
 ```csv
-Name,Email,Phone,Address
-John Doe,john.doe@example.com,555-0100,123 Main Street
+Name,Phone,Address
+John Doe,555-0100,123 Main Street
 ```
 
 ## Creating Your Own CSV Files
@@ -25,12 +25,11 @@ John Doe,john.doe@example.com,555-0100,123 Main Street
 ### Customer Import Format
 Your CSV file should have the following columns in order:
 1. **Name** (required): Customer's full name
-2. **Email** (optional): Customer's email address
-3. **Phone** (optional): Customer's phone number
-4. **Address** (optional): Customer's physical address
+2. **Phone** (optional): Customer's phone number
+3. **Address** (optional): Customer's physical address
 
 **Important Notes:**
-- First row should be the header row (Name,Email,Phone,Address)
+- First row should be the header row (Name,Phone,Address)
 - Name field is required, others are optional
 - Use commas to separate fields
 - If a field contains a comma, wrap it in quotes: "123 Main St, Apt 4"
@@ -40,24 +39,24 @@ Your CSV file should have the following columns in order:
 
 #### Minimal Format (Name only)
 ```csv
-Name,Email,Phone,Address
-John Doe,,,
-Jane Smith,,,
-Bob Johnson,,,
+Name,Phone,Address
+John Doe,,
+Jane Smith,,
+Bob Johnson,,
 ```
 
-#### With Email
+#### With Phone
 ```csv
-Name,Email,Phone,Address
-John Doe,john@example.com,,
-Jane Smith,jane@example.com,,
+Name,Phone,Address
+John Doe,555-0100,
+Jane Smith,555-0101,
 ```
 
 #### Complete Format
 ```csv
-Name,Email,Phone,Address
-John Doe,john@example.com,555-0100,123 Main St
-Jane Smith,jane@example.com,555-0101,456 Oak Ave
+Name,Phone,Address
+John Doe,555-0100,123 Main St
+Jane Smith,555-0101,456 Oak Ave
 ```
 
 ## Best Practices
@@ -86,19 +85,19 @@ Jane Smith,jane@example.com,555-0101,456 Oak Ave
 ## Generating Your Own CSV
 
 ### Using Excel
-1. Create a spreadsheet with columns: Name, Email, Phone, Address
+1. Create a spreadsheet with columns: Name, Phone, Address
 2. Enter your data
 3. File > Save As > CSV (Comma delimited) (*.csv)
 4. Select UTF-8 encoding if available
 
 ### Using Google Sheets
-1. Create a spreadsheet with columns: Name, Email, Phone, Address
+1. Create a spreadsheet with columns: Name, Phone, Address
 2. Enter your data
 3. File > Download > Comma-separated values (.csv)
 
 ### Using a Text Editor
 1. Create a new text file
-2. Add header row: Name,Email,Phone,Address
+2. Add header row: Name,Phone,Address
 3. Add data rows, one per line
 4. Save as .csv file with UTF-8 encoding
 

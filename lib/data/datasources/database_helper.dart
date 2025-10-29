@@ -51,12 +51,22 @@ class DatabaseHelper {
     const integerType = 'INTEGER NOT NULL';
     const realType = 'REAL NOT NULL';
     
-    // Customers table
+    // Users table for authentication
+    await db.execute('''
+      CREATE TABLE users (
+        id $idType,
+        username $textType UNIQUE,
+        password_hash $textType,
+        created_at $textType,
+        updated_at $textType
+      )
+    ''');
+    
+    // Customers table (email removed for local store use)
     await db.execute('''
       CREATE TABLE customers (
         id $idType,
         name $textType,
-        email TEXT,
         phone TEXT,
         address TEXT,
         notes TEXT,
