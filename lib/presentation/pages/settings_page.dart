@@ -4,6 +4,7 @@ import '../controllers/theme_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../../data/datasources/database_helper.dart';
+import 'audit_logs_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -169,35 +170,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showAuditLogs(BuildContext context) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Audit Logs'),
-        content: const SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Audit log visualization will be available soon.'),
-              SizedBox(height: 16),
-              Text(
-                'This feature will show:\n'
-                '• Activity timeline\n'
-                '• User actions\n'
-                '• Data changes\n'
-                '• Visual charts',
-                style: TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
+    Get.to(() => const AuditLogsPage());
   }
 
   void _showAboutDialog(BuildContext context) {

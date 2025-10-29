@@ -11,6 +11,7 @@ import 'presentation/pages/entry_list_page.dart';
 import 'presentation/pages/settings_page.dart';
 import 'presentation/themes/app_theme.dart';
 import 'presentation/controllers/theme_controller.dart';
+import 'presentation/widgets/keyboard_shortcuts.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -52,19 +53,21 @@ class LedgerXApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeController = Get.put(ThemeController());
     
-    return Obx(() => GetMaterialApp(
-      title: 'LedgerX',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeController.themeMode.value,
-      initialRoute: '/',
-      getPages: [
-        GetPage(name: '/', page: () => const HomePage()),
-        GetPage(name: '/customers', page: () => const CustomerListPage()),
-        GetPage(name: '/entries', page: () => const EntryListPage()),
-        GetPage(name: '/settings', page: () => const SettingsPage()),
-      ],
-      debugShowCheckedModeBanner: false,
+    return Obx(() => KeyboardShortcuts(
+      child: GetMaterialApp(
+        title: 'LedgerX',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeController.themeMode.value,
+        initialRoute: '/',
+        getPages: [
+          GetPage(name: '/', page: () => const HomePage()),
+          GetPage(name: '/customers', page: () => const CustomerListPage()),
+          GetPage(name: '/entries', page: () => const EntryListPage()),
+          GetPage(name: '/settings', page: () => const SettingsPage()),
+        ],
+        debugShowCheckedModeBanner: false,
+      ),
     ));
   }
 }
