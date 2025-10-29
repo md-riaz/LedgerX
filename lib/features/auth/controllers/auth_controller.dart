@@ -1,9 +1,10 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-import '../../data/datasources/database_helper.dart';
-import '../../domain/entities/user.dart';
+
+import 'package:ledgerx/data/datasources/database_helper.dart';
+import 'package:ledgerx/domain/entities/user.dart';
 
 class AuthController extends GetxController {
   final RxBool isLoggedIn = false.obs;

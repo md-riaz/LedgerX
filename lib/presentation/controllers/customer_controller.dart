@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
-import '../../domain/entities/customer.dart';
-import '../../data/repositories/customer_repository_impl.dart';
+import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
+import 'package:ledgerx/domain/entities/customer.dart';
 
 class CustomerController extends GetxController {
   final CustomerRepositoryImpl _repository = CustomerRepositoryImpl();
-  
+
   final RxList<Customer> customers = <Customer>[].obs;
   final RxList<Customer> filteredCustomers = <Customer>[].obs;
   final RxBool isLoading = false.obs;
@@ -63,12 +63,13 @@ class CustomerController extends GetxController {
     if (query.isEmpty) {
       filteredCustomers.value = customers;
     } else {
-      filteredCustomers.value = customers
-          .where((customer) =>
-              customer.name.toLowerCase().contains(query.toLowerCase()) ||
-              (customer.email?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-              (customer.phone?.contains(query) ?? false))
-          .toList();
+      filteredCustomers.value = customers.where((customer) {
+        final lowerQuery = query.toLowerCase();
+        return customer.name.toLowerCase().contains(lowerQuery) ||
+            (customer.phone?.toLowerCase().contains(lowerQuery) ?? false) ||
+            (customer.address?.toLowerCase().contains(lowerQuery) ?? false) ||
+            (customer.notes?.toLowerCase().contains(lowerQuery) ?? false);
+      }).toList();
     }
   }
 }

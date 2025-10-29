@@ -1,10 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/theme_controller.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import '../../data/datasources/database_helper.dart';
-import 'audit_logs_page.dart';
+import 'package:ledgerx/data/datasources/database_helper.dart';
+import 'package:ledgerx/presentation/controllers/theme_controller.dart';
+import 'package:ledgerx/presentation/pages/audit_logs_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -123,10 +122,10 @@ class SettingsPage extends StatelessWidget {
     try {
       final dbHelper = DatabaseHelper.instance;
       final db = await dbHelper.database;
-      
+
       // Get the database path
       final dbPath = db.path;
-      
+
       Get.snackbar(
         'Backup',
         'Database path: $dbPath\nBackup functionality will copy this file to your selected location.',
