@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
-import '../../domain/entities/customer.dart';
-import '../../data/repositories/customer_repository_impl.dart';
+
+import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
+import 'package:ledgerx/domain/entities/customer.dart';
 
 class CustomerController extends GetxController {
   final CustomerRepositoryImpl _repository = CustomerRepositoryImpl();

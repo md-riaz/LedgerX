@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/theme_controller.dart';
-import '../../features/auth/controllers/auth_controller.dart';
-import '../../features/auth/pages/change_password_page.dart';
-import 'audit_logs_page.dart';
+
+import 'package:ledgerx/features/auth/controllers/auth_controller.dart';
+import 'package:ledgerx/features/auth/pages/change_password_page.dart';
+import 'package:ledgerx/presentation/controllers/theme_controller.dart';
+import 'package:ledgerx/presentation/pages/audit_logs_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -14,13 +15,11 @@ class SettingsPage extends StatelessWidget {
     final authController = Get.find<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const SizedBox(height: 16),
-          
+
           // User Section
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
@@ -33,13 +32,13 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          Obx(() => ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
-                title: Text(authController.currentUser.value?.username ?? 'User'),
-                subtitle: const Text('Logged in'),
-              )),
+          Obx(
+            () => ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.person)),
+              title: Text(authController.currentUser.value?.username ?? 'User'),
+              subtitle: const Text('Logged in'),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.lock),
             title: const Text('Change Password'),
@@ -53,9 +52,9 @@ class SettingsPage extends StatelessWidget {
             subtitle: const Text('Sign out from your account'),
             onTap: () => _confirmLogout(authController),
           ),
-          
+
           const Divider(),
-          
+
           // Appearance Section
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -68,24 +67,26 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          Obx(() => SwitchListTile(
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Toggle dark/light theme'),
-                value: themeController.themeMode.value == ThemeMode.dark,
-                onChanged: (value) {
-                  themeController.setThemeMode(
-                    value ? ThemeMode.dark : ThemeMode.light,
-                  );
-                },
-                secondary: Icon(
-                  themeController.themeMode.value == ThemeMode.dark
-                      ? Icons.dark_mode
-                      : Icons.light_mode,
-                ),
-              )),
-          
+          Obx(
+            () => SwitchListTile(
+              title: const Text('Dark Mode'),
+              subtitle: const Text('Toggle dark/light theme'),
+              value: themeController.themeMode.value == ThemeMode.dark,
+              onChanged: (value) {
+                themeController.setThemeMode(
+                  value ? ThemeMode.dark : ThemeMode.light,
+                );
+              },
+              secondary: Icon(
+                themeController.themeMode.value == ThemeMode.dark
+                    ? Icons.dark_mode
+                    : Icons.light_mode,
+              ),
+            ),
+          ),
+
           const Divider(),
-          
+
           // Audit Section
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -105,9 +106,9 @@ class SettingsPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Get.to(() => const AuditLogsPage()),
           ),
-          
+
           const Divider(),
-          
+
           // About Section
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -138,10 +139,7 @@ class SettingsPage extends StatelessWidget {
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Get.back();
@@ -175,10 +173,7 @@ class SettingsPage extends StatelessWidget {
               style: TextStyle(fontSize: 14),
             ),
             SizedBox(height: 16),
-            Text(
-              'Features:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Features:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             Text(
               '• Customer management\n'
@@ -192,10 +187,7 @@ class SettingsPage extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Close')),
         ],
       ),
     );
