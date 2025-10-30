@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'dart:io';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'data/datasources/database_helper.dart';
 import 'features/auth/controllers/auth_controller.dart';
@@ -15,37 +15,50 @@ import 'features/settings/pages/settings_page.dart';
 import 'presentation/themes/app_theme.dart';
 import 'presentation/controllers/theme_controller.dart';
 import 'presentation/controllers/entry_controller.dart';
+import 'utils/platform_utils.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize FFI for desktop platforms
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  if (PlatformUtils.isWeb) {
+    databaseFactory = createDatabaseFactoryFfiWeb(
+      options: SqfliteFfiWebOptions(
+        sharedWorkerUri: Uri.parse(
+          'assets/packages/sqflite_common_ffi_web/assets/sqflite_sw.js',
+        ),
+        sqlite3WasmUri: Uri.parse(
+          'assets/packages/sqflite_common_ffi_web/assets/sqlite3.wasm',
+        ),
+      ),
+    );
+  } else if (PlatformUtils.isDesktop) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
+
   // Initialize database
   await DatabaseHelper.instance.database;
-  
+
   // Initialize notifications
-  const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
   const initializationSettingsIOS = DarwinInitializationSettings();
   const initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: initializationSettingsIOS,
   );
-  
+
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       // Handle notification tap
     },
   );
-  
+
   runApp(const LedgerXApp());
 }
 

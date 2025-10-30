@@ -1,11 +1,15 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
 import 'package:ledgerx/presentation/controllers/customer_controller.dart';
+import 'package:ledgerx/utils/io_stub.dart' if (dart.library.io) 'dart:io'
+    as io;
 
 class CustomerListPage extends StatelessWidget {
   const CustomerListPage({super.key});
@@ -310,11 +314,24 @@ class CustomerListPage extends StatelessWidget {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
+        withData: true,
       );
 
       if (result != null) {
-        final file = File(result.files.single.path!);
-        final input = file.readAsStringSync();
+        final file = result.files.single;
+        final bytes = await _resolveFileBytes(file);
+        if (bytes == null) {
+          Get.snackbar(
+            'Error',
+            'Unable to read CSV file contents.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
+
+        final input = utf8.decode(bytes);
         final fields = const CsvToListConverter().convert(input);
 
         if (fields.isEmpty) return;
@@ -401,10 +418,20 @@ class CustomerListPage extends StatelessWidget {
       }
 
       final csvData = const ListToCsvConverter().convert(rows);
+      final fileName =
+          'ledgerx_customers_${DateTime.now().toIso8601String().replaceAll(':', '-')}.csv';
+      final csvBytes = Uint8List.fromList(utf8.encode(csvData));
+
+      await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: csvBytes,
+        ext: 'csv',
+        mimeType: MimeType.csv,
+      );
 
       Get.snackbar(
-        'Export',
-        'CSV export will be available soon. Prepared ${customers.length} customers (${csvData.length} characters).',
+        'Exported',
+        'Saved ${customers.length} customers to $fileName',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
@@ -415,6 +442,25 @@ class CustomerListPage extends StatelessWidget {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    }
+  }
+
+  Future<Uint8List?> _resolveFileBytes(PlatformFile file) async {
+    if (file.bytes != null) {
+      return file.bytes;
+    }
+
+    final path = file.path;
+    if (path == null) {
+      return null;
+    }
+
+    try {
+      final fileBytes = await io.File(path).readAsBytes();
+      return Uint8List.fromList(fileBytes);
+    } catch (e, s) {
+      Get.log('Failed to read file bytes from $path: $e\n$s');
+      return null;
     }
   }
 }
