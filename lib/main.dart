@@ -17,8 +17,8 @@ import 'presentation/controllers/theme_controller.dart';
 import 'presentation/controllers/entry_controller.dart';
 import 'utils/platform_utils.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin =
+    PlatformUtils.isWeb ? null : FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,21 +43,25 @@ void main() async {
   // Initialize database
   await DatabaseHelper.instance.database;
 
-  // Initialize notifications
-  const initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initializationSettingsIOS = DarwinInitializationSettings();
-  const initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-  );
+  if (PlatformUtils.isWeb) {
+    debugPrint('LedgerX: Local notifications are not supported on the web yet.');
+  } else {
+    // Initialize notifications
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsIOS = DarwinInitializationSettings();
+    const initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse response) {
-      // Handle notification tap
-    },
-  );
+    await flutterLocalNotificationsPlugin!.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Handle notification tap
+      },
+    );
+  }
 
   runApp(const LedgerXApp());
 }

@@ -1,11 +1,25 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+
 import '../../domain/entities/reminder.dart';
+import '../../utils/platform_utils.dart';
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  NotificationService() {
+    _logWebWarning();
+  }
+
+  final FlutterLocalNotificationsPlugin? _notifications =
+      PlatformUtils.isWeb ? null : FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
+    if (PlatformUtils.isWeb) {
+      _logWebWarning('initialize');
+      return;
+    }
+
+    final notifications = _notifications!;
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -18,13 +32,13 @@ class NotificationService {
       iOS: iosSettings,
     );
 
-    await _notifications.initialize(
+    await notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
     // Request permissions for iOS
-    await _notifications
+    await notifications
         .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(
           alert: true,
@@ -33,7 +47,7 @@ class NotificationService {
         );
 
     // Request permissions for Android 13+
-    await _notifications
+    await notifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
@@ -44,6 +58,11 @@ class NotificationService {
   }
 
   Future<void> scheduleReminder(Reminder reminder) async {
+    if (PlatformUtils.isWeb) {
+      _logWebWarning('scheduleReminder');
+      return;
+    }
+
     if (reminder.isCompleted) return;
 
     const androidDetails = AndroidNotificationDetails(
@@ -63,7 +82,7 @@ class NotificationService {
 
     final scheduledDate = tz.TZDateTime.from(reminder.dueDate, tz.local);
 
-    await _notifications.zonedSchedule(
+    await _notifications!.zonedSchedule(
       reminder.id!,
       reminder.title,
       reminder.description ?? 'Reminder notification',
@@ -77,11 +96,21 @@ class NotificationService {
   }
 
   Future<void> cancelReminder(int reminderId) async {
-    await _notifications.cancel(reminderId);
+    if (PlatformUtils.isWeb) {
+      _logWebWarning('cancelReminder');
+      return;
+    }
+
+    await _notifications!.cancel(reminderId);
   }
 
   Future<void> cancelAllReminders() async {
-    await _notifications.cancelAll();
+    if (PlatformUtils.isWeb) {
+      _logWebWarning('cancelAllReminders');
+      return;
+    }
+
+    await _notifications!.cancelAll();
   }
 
   Future<void> showInstantNotification({
@@ -89,6 +118,11 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
+    if (PlatformUtils.isWeb) {
+      _logWebWarning('showInstantNotification');
+      return;
+    }
+
     const androidDetails = AndroidNotificationDetails(
       'instant_channel',
       'Instant Notifications',
@@ -104,12 +138,26 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.show(
+    await _notifications!.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
       notificationDetails,
       payload: payload,
     );
+  }
+
+  void _logWebWarning([String? context]) {
+    if (!PlatformUtils.isWeb) {
+      return;
+    }
+
+    final buffer = StringBuffer(
+      'LedgerX: Local notifications are not supported on the web yet.',
+    );
+    if (context != null) {
+      buffer.write(' (Called: $context)');
+    }
+    debugPrint(buffer.toString());
   }
 }
