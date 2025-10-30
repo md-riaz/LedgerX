@@ -28,10 +28,10 @@ void main() async {
     databaseFactory = createDatabaseFactoryFfiWeb(
       options: SqfliteFfiWebOptions(
         sharedWorkerUri: Uri.parse(
-          'packages/sqflite_common_ffi_web/assets/sqflite_sw.js',
+          'assets/packages/sqflite_common_ffi_web/assets/sqflite_sw.js',
         ),
         sqlite3WasmUri: Uri.parse(
-          'packages/sqflite_common_ffi_web/assets/sqlite3.wasm',
+          'assets/packages/sqflite_common_ffi_web/assets/sqlite3.wasm',
         ),
       ),
     );

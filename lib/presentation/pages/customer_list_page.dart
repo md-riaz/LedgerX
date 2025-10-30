@@ -419,7 +419,7 @@ class CustomerListPage extends StatelessWidget {
 
       final csvData = const ListToCsvConverter().convert(rows);
       final fileName =
-          'ledgerx_customers_${DateTime.now().toIso8601String()}.csv';
+          'ledgerx_customers_${DateTime.now().toIso8601String().replaceAll(':', '-')}.csv';
       final csvBytes = Uint8List.fromList(utf8.encode(csvData));
 
       await FileSaver.instance.saveFile(
@@ -458,7 +458,8 @@ class CustomerListPage extends StatelessWidget {
     try {
       final fileBytes = await io.File(path).readAsBytes();
       return Uint8List.fromList(fileBytes);
-    } catch (_) {
+    } catch (e, s) {
+      Get.log('Failed to read file bytes from $path: $e\n$s');
       return null;
     }
   }
