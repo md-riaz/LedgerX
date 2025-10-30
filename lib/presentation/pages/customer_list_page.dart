@@ -20,17 +20,17 @@ class CustomerListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customers'),
+        title: const Text('কাস্টমার'),
         actions: [
           IconButton(
             icon: const Icon(Icons.upload_file),
             onPressed: () => _importCSV(controller),
-            tooltip: 'Import CSV',
+            tooltip: 'CSV ইম্পোর্ট',
           ),
           IconButton(
             icon: const Icon(Icons.download),
             onPressed: () => _exportCSV(controller),
-            tooltip: 'Export CSV',
+            tooltip: 'CSV এক্সপোর্ট',
           ),
         ],
       ),
@@ -40,7 +40,7 @@ class CustomerListPage extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: const InputDecoration(
-                hintText: 'Search customers...',
+                hintText: 'কাস্টমার সার্চ করুন...',
                 prefixIcon: Icon(Icons.search),
               ),
               onChanged: controller.searchCustomers,
@@ -64,7 +64,7 @@ class CustomerListPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No customers found',
+                        'কোনো কাস্টমার পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -90,7 +90,7 @@ class CustomerListPage extends StatelessWidget {
                         customer.phone ??
                             customer.address ??
                             customer.notes ??
-                            'No additional details',
+                            'অতিরিক্ত তথ্য নেই',
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
@@ -123,7 +123,7 @@ class CustomerListPage extends StatelessWidget {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Add Customer'),
+        title: const Text('কাস্টমার যোগ করুন'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -131,16 +131,16 @@ class CustomerListPage extends StatelessWidget {
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Name *',
-                  hintText: 'Enter customer name',
+                  labelText: 'নাম *',
+                  hintText: 'কাস্টমারের নাম লিখুন',
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: phoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  hintText: 'Enter phone number',
+                  labelText: 'ফোন',
+                  hintText: 'ফোন নম্বর লিখুন',
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -148,8 +148,8 @@ class CustomerListPage extends StatelessWidget {
               TextField(
                 controller: addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Enter address',
+                  labelText: 'ঠিকানা',
+                  hintText: 'ঠিকানা লিখুন',
                 ),
                 maxLines: 2,
               ),
@@ -157,8 +157,8 @@ class CustomerListPage extends StatelessWidget {
               TextField(
                 controller: notesController,
                 decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  hintText: 'Additional information',
+                  labelText: 'নোট',
+                  hintText: 'অতিরিক্ত তথ্য',
                 ),
                 maxLines: 3,
               ),
@@ -168,7 +168,7 @@ class CustomerListPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -188,7 +188,7 @@ class CustomerListPage extends StatelessWidget {
                 controller.createCustomer(customer);
               }
             },
-            child: const Text('Add'),
+            child: const Text('যোগ করুন'),
           ),
         ],
       ),
@@ -240,7 +240,7 @@ class CustomerListPage extends StatelessWidget {
             if (customer.phone != null) ...[
               ListTile(
                 leading: const Icon(Icons.phone),
-                title: const Text('Phone'),
+                title: const Text('ফোন'),
                 subtitle: Text(customer.phone!),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -248,7 +248,7 @@ class CustomerListPage extends StatelessWidget {
             if (customer.address != null) ...[
               ListTile(
                 leading: const Icon(Icons.location_on),
-                title: const Text('Address'),
+                title: const Text('ঠিকানা'),
                 subtitle: Text(customer.address!),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -256,7 +256,7 @@ class CustomerListPage extends StatelessWidget {
             if (customer.notes != null && customer.notes!.isNotEmpty) ...[
               ListTile(
                 leading: const Icon(Icons.note),
-                title: const Text('Notes'),
+                title: const Text('নোট'),
                 subtitle: Text(customer.notes!),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -267,7 +267,7 @@ class CustomerListPage extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text('Close'),
+                  child: const Text('বন্ধ করুন'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
@@ -275,7 +275,7 @@ class CustomerListPage extends StatelessWidget {
                     Get.back();
                     Get.toNamed('/entries', arguments: customer.id);
                   },
-                  child: const Text('View Entries'),
+                  child: const Text('এন্ট্রি দেখুন'),
                 ),
               ],
             ),
@@ -289,12 +289,12 @@ class CustomerListPage extends StatelessWidget {
       BuildContext context, CustomerController controller, Customer customer) {
     Get.dialog(
       AlertDialog(
-        title: const Text('Delete Customer'),
-        content: Text('Are you sure you want to delete ${customer.name}?'),
+        title: const Text('কাস্টমার মুছে ফেলুন'),
+        content: Text('${customer.name} কাস্টমারকে কি মুছে ফেলতে চান?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -302,7 +302,7 @@ class CustomerListPage extends StatelessWidget {
               controller.deleteCustomer(customer.id!);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('মুছে ফেলুন'),
           ),
         ],
       ),
@@ -322,8 +322,8 @@ class CustomerListPage extends StatelessWidget {
         final bytes = await _resolveFileBytes(file);
         if (bytes == null) {
           Get.snackbar(
-            'Error',
-            'Unable to read CSV file contents.',
+            'ত্রুটি',
+            'CSV ফাইল পড়া যায়নি।',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red,
             colorText: Colors.white,
@@ -385,15 +385,15 @@ class CustomerListPage extends StatelessWidget {
         }
 
         Get.snackbar(
-          'Success',
-          'Customers imported successfully',
+          'সফল',
+          'কাস্টমার সফলভাবে ইম্পোর্ট হয়েছে',
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Failed to import CSV: ${e.toString()}',
+        'ত্রুটি',
+        'CSV ইম্পোর্ট ব্যর্থ: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -429,14 +429,14 @@ class CustomerListPage extends StatelessWidget {
       );
 
       Get.snackbar(
-        'Exported',
-        'Saved ${customers.length} customers to $fileName',
+        'এক্সপোর্ট সম্পন্ন',
+        '${customers.length} জন কাস্টমার $fileName ফাইলে সংরক্ষণ হয়েছে',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Failed to export CSV: ${e.toString()}',
+        'ত্রুটি',
+        'CSV এক্সপোর্ট ব্যর্থ: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

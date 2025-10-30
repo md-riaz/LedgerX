@@ -31,15 +31,15 @@ Use the top navigation bar to move between:
 ## Features Overview
 
 ### Core Features
-- **Offline-First**: All data is stored locally using SQLite
-- **Encrypted Storage**: Database is secured with AES encryption
+- **Offline-First**: All data is stored locally using SQLite via Drift
+- **Secure Credentials**: User passwords are hashed with SHA-256
 - **Real-Time Balance**: Automatic balance calculation per customer
 - **Cross-Platform**: Works on Windows, Linux, macOS, Android, and iOS
 
 ### Security Features
-- AES file encryption for the database
+- SHA-256 password hashing
 - Audit logging for all operations
-- Secure data storage
+- Local-only storage (no network sync by default)
 
 ## Customer Management
 
@@ -282,10 +282,10 @@ The balance is calculated in real-time:
 Balance = Sum(Credits) - Sum(Debits)
 ```
 
-### Database Encryption
-- All data is encrypted using AES-256
-- Encryption key is managed securely
-- Data is encrypted at rest
+### Data Security
+- User credentials are hashed with SHA-256 before storage
+- Data resides locally on the device
+- Add platform-specific at-rest encryption if required for compliance
 
 ### Audit Trail
 Every action is logged with:

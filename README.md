@@ -21,7 +21,7 @@ A comprehensive Flutter desktop-mobile, offline-first ledger application with en
 - **Offline-First**: Works completely offline with local SQLite storage
 
 ### Security & Privacy
-- **AES Encryption**: Database file encryption for sensitive data
+- **Credential Hashing**: Store user passwords with SHA-256 hashes
 - **Audit Logging**: Complete activity tracking with visualization
 - **Data Integrity**: Repository pattern with clean architecture
 
@@ -62,8 +62,8 @@ lib/
 
 - **Framework**: Flutter 3.0+
 - **State Management**: GetX 4.6+
-- **Database**: SQLite (sqflite_common_ffi)
-- **Encryption**: AES via encrypt package
+- **Database**: Drift ORM + sqlite3_flutter_libs
+- **Security**: SHA-256 hashing via crypto
 - **PDF Generation**: pdf & printing packages
 - **CSV Processing**: csv package
 - **Notifications**: flutter_local_notifications
@@ -172,10 +172,10 @@ The main dashboard provides a quick overview of your ledger with:
 
 ## 🔐 Security
 
-- **Database Encryption**: AES encryption for sensitive data
-- **Secure Key Management**: Encryption keys should be properly managed in production
+- **Credential Hashing**: SHA-256 hashing for user passwords
 - **Audit Trail**: All CRUD operations are logged
 - **Data Validation**: Input validation at all layers
+- **Future Hardening**: Add at-rest encryption or secure storage as required for deployments
 
 ## 🎨 Customization
 
@@ -186,7 +186,7 @@ Modify themes in `lib/presentation/themes/app_theme.dart`:
 - Custom color schemes
 
 ### Database Schema
-Database schema can be modified in `lib/data/datasources/database_helper.dart`
+Database schema can be modified in `lib/data/datasources/ledger_database.dart`
 
 ## 📊 Audit Logging
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
 import '../../domain/entities/entry.dart';
-import '../controllers/entry_controller.dart';
 import '../controllers/customer_controller.dart';
+import '../controllers/entry_controller.dart';
 import '../themes/app_theme.dart';
 
 class EntryListPage extends StatelessWidget {
@@ -22,12 +23,12 @@ class EntryListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Entries'),
+        title: const Text('এন্ট্রি'),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             onPressed: () => _exportPDF(controller),
-            tooltip: 'Export PDF',
+            tooltip: 'PDF এক্সপোর্ট করুন',
           ),
         ],
       ),
@@ -39,7 +40,7 @@ class EntryListPage extends StatelessWidget {
               children: [
                 TextField(
                   decoration: const InputDecoration(
-                    hintText: 'Search entries...',
+                    hintText: 'এন্ট্রি সার্চ করুন...',
                     prefixIcon: Icon(Icons.search),
                   ),
                   onChanged: controller.searchEntries,
@@ -61,14 +62,14 @@ class EntryListPage extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'Balance:',
+                                    'ব্যালেন্স:',
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    '\$${balance.toStringAsFixed(2)}',
+                                    '৳${balance.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
@@ -109,7 +110,7 @@ class EntryListPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No entries found',
+                        'কোনো এন্ট্রি পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -139,7 +140,7 @@ class EntryListPage extends StatelessWidget {
                         ),
                       ),
                       title: Text(
-                        '\$${entry.amount.toStringAsFixed(2)}',
+                        '৳${entry.amount.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: entry.type == EntryType.credit
@@ -209,13 +210,13 @@ class EntryListPage extends StatelessWidget {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Add Entry'),
+        title: const Text('এন্ট্রি যোগ করুন'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(() => DropdownMenu<int>(
-                    label: const Text('Customer *'),
+                    label: const Text('কাস্টমার *'),
                     initialSelection: selectedCustomerId.value,
                     dropdownMenuEntries: customerController.customers
                         .where((customer) => customer.id != null)
@@ -231,12 +232,12 @@ class EntryListPage extends StatelessWidget {
                     segments: const [
                       ButtonSegment(
                         value: EntryType.credit,
-                        label: Text('Credit'),
+                        label: Text('ক্রেডিট'),
                         icon: Icon(Icons.add),
                       ),
                       ButtonSegment(
                         value: EntryType.debit,
-                        label: Text('Debit'),
+                        label: Text('ডেবিট'),
                         icon: Icon(Icons.remove),
                       ),
                     ],
@@ -249,9 +250,9 @@ class EntryListPage extends StatelessWidget {
               TextField(
                 controller: amountController,
                 decoration: const InputDecoration(
-                  labelText: 'Amount *',
-                  hintText: 'Enter amount',
-                  prefixText: '\$ ',
+                  labelText: 'পরিমাণ *',
+                  hintText: 'টাকার পরিমাণ লিখুন',
+                  prefixText: '৳ ',
                 ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
@@ -260,8 +261,8 @@ class EntryListPage extends StatelessWidget {
               TextField(
                 controller: descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Enter description',
+                  labelText: 'বিবরণ',
+                  hintText: 'বিবরণ লিখুন',
                 ),
                 maxLines: 2,
               ),
@@ -269,13 +270,13 @@ class EntryListPage extends StatelessWidget {
               TextField(
                 controller: tagsController,
                 decoration: const InputDecoration(
-                  labelText: 'Tags',
-                  hintText: 'Enter tags (comma separated)',
+                  labelText: 'ট্যাগ',
+                  hintText: 'কমা দিয়ে ট্যাগ লিখুন',
                 ),
               ),
               const SizedBox(height: 16),
               Obx(() => ListTile(
-                    title: const Text('Date'),
+                    title: const Text('তারিখ'),
                     subtitle: Text(
                         DateFormat('MMM dd, yyyy').format(selectedDate.value)),
                     trailing: const Icon(Icons.calendar_today),
@@ -297,7 +298,7 @@ class EntryListPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -321,7 +322,7 @@ class EntryListPage extends StatelessWidget {
                 controller.createEntry(entry);
               }
             },
-            child: const Text('Add'),
+            child: const Text('যোগ করুন'),
           ),
         ],
       ),
@@ -359,7 +360,7 @@ class EntryListPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '\$${entry.amount.toStringAsFixed(2)}',
+                        '৳${entry.amount.toStringAsFixed(2)}',
                         style:
                             Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -369,7 +370,7 @@ class EntryListPage extends StatelessWidget {
                                 ),
                       ),
                       Text(
-                        entry.type.name.toUpperCase(),
+                        entry.type == EntryType.credit ? 'ক্রেডিট' : 'ডেবিট',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -381,21 +382,21 @@ class EntryListPage extends StatelessWidget {
             if (entry.description != null) ...[
               ListTile(
                 leading: const Icon(Icons.description),
-                title: const Text('Description'),
+                title: const Text('বিবরণ'),
                 subtitle: Text(entry.description!),
                 contentPadding: EdgeInsets.zero,
               ),
             ],
             ListTile(
               leading: const Icon(Icons.calendar_today),
-              title: const Text('Date'),
+              title: const Text('তারিখ'),
               subtitle: Text(DateFormat('MMM dd, yyyy').format(entry.date)),
               contentPadding: EdgeInsets.zero,
             ),
             if (entry.tags.isNotEmpty) ...[
               ListTile(
                 leading: const Icon(Icons.label),
-                title: const Text('Tags'),
+                title: const Text('ট্যাগ'),
                 subtitle: Wrap(
                   spacing: 4,
                   children: entry.tags
@@ -415,7 +416,7 @@ class EntryListPage extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text('Close'),
+                  child: const Text('বন্ধ করুন'),
                 ),
               ],
             ),
@@ -429,13 +430,13 @@ class EntryListPage extends StatelessWidget {
       BuildContext context, EntryController controller, Entry entry) {
     Get.dialog(
       AlertDialog(
-        title: const Text('Delete Entry'),
+        title: const Text('এন্ট্রি মুছে ফেলুন'),
         content: Text(
-            'Are you sure you want to delete this entry of \$${entry.amount.toStringAsFixed(2)}?'),
+            '৳${entry.amount.toStringAsFixed(2)} পরিমাণের এই এন্ট্রি কি মুছে ফেলতে চান?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -443,7 +444,7 @@ class EntryListPage extends StatelessWidget {
               controller.deleteEntry(entry.id!);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('মুছে ফেলুন'),
           ),
         ],
       ),
@@ -452,8 +453,8 @@ class EntryListPage extends StatelessWidget {
 
   void _exportPDF(EntryController controller) {
     Get.snackbar(
-      'Export PDF',
-      'PDF export functionality will be available soon',
+      'PDF এক্সপোর্ট',
+      'PDF এক্সপোর্ট ফিচার শীঘ্রই আসছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }

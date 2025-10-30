@@ -1,15 +1,19 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:ledgerx/data/datasources/database_helper.dart';
+import 'package:crypto/crypto.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:get/get.dart';
+import 'package:ledgerx/data/datasources/ledger_database.dart';
 import 'package:ledgerx/domain/entities/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController extends GetxController {
   final RxBool isLoggedIn = false.obs;
   final Rx<User?> currentUser = Rx<User?>(null);
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final LedgerDatabase _db;
+
+  AuthController({LedgerDatabase? database})
+      : _db = database ?? LedgerDatabase();
 
   @override
   void onInit() {
@@ -21,7 +25,7 @@ class AuthController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedInPref = prefs.getBool('is_logged_in') ?? false;
     final userId = prefs.getInt('user_id');
-    
+
     if (isLoggedInPref && userId != null) {
       await loadUser(userId);
       isLoggedIn.value = true;
@@ -29,15 +33,12 @@ class AuthController extends GetxController {
   }
 
   Future<void> loadUser(int userId) async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'users',
-      where: 'id = ?',
-      whereArgs: [userId],
-    );
-    
-    if (maps.isNotEmpty) {
-      currentUser.value = User.fromMap(maps.first);
+    final row = await (_db.select(_db.dbUsers)
+          ..where((tbl) => tbl.id.equals(userId)))
+        .getSingleOrNull();
+
+    if (row != null) {
+      currentUser.value = _mapUser(row);
     }
   }
 
@@ -49,24 +50,25 @@ class AuthController extends GetxController {
 
   Future<bool> login(String username, String password) async {
     try {
-      final db = await _dbHelper.database;
       final passwordHash = _hashPassword(password);
-      
-      final List<Map<String, dynamic>> maps = await db.query(
-        'users',
-        where: 'username = ? AND password_hash = ?',
-        whereArgs: [username, passwordHash],
-      );
-      
-      if (maps.isNotEmpty) {
-        final user = User.fromMap(maps.first);
+
+      final row = await (_db.select(_db.dbUsers)
+            ..where(
+              (tbl) =>
+                  tbl.username.equals(username) &
+                  tbl.passwordHash.equals(passwordHash),
+            ))
+          .getSingleOrNull();
+
+      if (row != null) {
+        final user = _mapUser(row);
         currentUser.value = user;
         isLoggedIn.value = true;
-        
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_logged_in', true);
         await prefs.setInt('user_id', user.id!);
-        
+
         return true;
       }
       return false;
@@ -77,33 +79,36 @@ class AuthController extends GetxController {
 
   Future<bool> register(String username, String password) async {
     try {
-      final db = await _dbHelper.database;
       final passwordHash = _hashPassword(password);
-      
+
       // Check if user already exists
-      final existing = await db.query(
-        'users',
-        where: 'username = ?',
-        whereArgs: [username],
-      );
-      
-      if (existing.isNotEmpty) {
+      final existing = await (_db.select(_db.dbUsers)
+            ..where((tbl) => tbl.username.equals(username)))
+          .getSingleOrNull();
+
+      if (existing != null) {
         return false; // User already exists
       }
-      
+
       final user = User(
         username: username,
         passwordHash: passwordHash,
       );
-      
-      final id = await db.insert('users', user.toMap());
+      final id = await _db.into(_db.dbUsers).insert(
+            DbUsersCompanion.insert(
+              username: username,
+              passwordHash: passwordHash,
+              createdAt: drift.Value(user.createdAt),
+              updatedAt: drift.Value(user.updatedAt),
+            ),
+          );
       currentUser.value = user.copyWith(id: id);
       isLoggedIn.value = true;
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_logged_in', true);
       await prefs.setInt('user_id', id);
-      
+
       return true;
     } catch (e) {
       return false;
@@ -113,30 +118,31 @@ class AuthController extends GetxController {
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     try {
       if (currentUser.value == null) return false;
-      
-      final db = await _dbHelper.database;
       final oldPasswordHash = _hashPassword(oldPassword);
-      
-      // Verify old password
-      final List<Map<String, dynamic>> maps = await db.query(
-        'users',
-        where: 'id = ? AND password_hash = ?',
-        whereArgs: [currentUser.value!.id, oldPasswordHash],
-      );
-      
-      if (maps.isEmpty) {
+
+      final existing = await (_db.select(_db.dbUsers)
+            ..where(
+              (tbl) =>
+                  tbl.id.equals(currentUser.value!.id!) &
+                  tbl.passwordHash.equals(oldPasswordHash),
+            ))
+          .getSingleOrNull();
+
+      if (existing == null) {
         return false; // Old password incorrect
       }
-      
+
       // Update with new password
       final newPasswordHash = _hashPassword(newPassword);
-      await db.update(
-        'users',
-        {'password_hash': newPasswordHash, 'updated_at': DateTime.now().toIso8601String()},
-        where: 'id = ?',
-        whereArgs: [currentUser.value!.id],
+      await (_db.update(_db.dbUsers)
+            ..where((tbl) => tbl.id.equals(currentUser.value!.id!)))
+          .write(
+        DbUsersCompanion(
+          passwordHash: drift.Value(newPasswordHash),
+          updatedAt: drift.Value(DateTime.now()),
+        ),
       );
-      
+
       return true;
     } catch (e) {
       return false;
@@ -146,17 +152,16 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     isLoggedIn.value = false;
     currentUser.value = null;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', false);
     await prefs.remove('user_id');
-    
+
     Get.offAllNamed('/login');
   }
 
   Future<bool> hasAnyUser() async {
-    final db = await _dbHelper.database;
-    final result = await db.query('users', limit: 1);
+    final result = await (_db.select(_db.dbUsers)..limit(1)).get();
     return result.isNotEmpty;
   }
 }
@@ -175,6 +180,18 @@ extension UserCopyWith on User {
       passwordHash: passwordHash ?? this.passwordHash,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
+extension _UserMapper on AuthController {
+  User _mapUser(DbUser row) {
+    return User(
+      id: row.id,
+      username: row.username,
+      passwordHash: row.passwordHash,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     );
   }
 }

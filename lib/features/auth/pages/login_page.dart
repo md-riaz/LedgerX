@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/auth_controller.dart';
 
 class LoginPage extends GetView<AuthController> {
@@ -34,7 +35,7 @@ class LoginPage extends GetView<AuthController> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Local Store Ledger',
+                  'লোকাল স্টোর লেজার',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -43,7 +44,7 @@ class LoginPage extends GetView<AuthController> {
                 TextField(
                   controller: usernameController,
                   decoration: const InputDecoration(
-                    labelText: 'Username',
+                    labelText: 'ইউজারনেম',
                     prefixIcon: Icon(Icons.person),
                   ),
                   textInputAction: TextInputAction.next,
@@ -52,7 +53,7 @@ class LoginPage extends GetView<AuthController> {
                 TextField(
                   controller: passwordController,
                   decoration: const InputDecoration(
-                    labelText: 'Password',
+                    labelText: 'পাসওয়ার্ড',
                     prefixIcon: Icon(Icons.lock),
                   ),
                   obscureText: true,
@@ -79,9 +80,10 @@ class LoginPage extends GetView<AuthController> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Text('Login'),
+                            : const Text('লগইন'),
                       ),
                     )),
                 const SizedBox(height: 16),
@@ -91,7 +93,7 @@ class LoginPage extends GetView<AuthController> {
                     if (snapshot.data == false) {
                       return TextButton(
                         onPressed: () => _showRegisterDialog(context),
-                        child: const Text('Create First User'),
+                        child: const Text('প্রথম ইউজার তৈরি করুন'),
                       );
                     }
                     return const SizedBox.shrink();
@@ -112,8 +114,8 @@ class LoginPage extends GetView<AuthController> {
   ) async {
     if (username.isEmpty || password.isEmpty) {
       Get.snackbar(
-        'Error',
-        'Please enter username and password',
+        'ত্রুটি',
+        'ইউজারনেম ও পাসওয়ার্ড লিখুন',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -129,8 +131,8 @@ class LoginPage extends GetView<AuthController> {
       Get.offAllNamed('/');
     } else {
       Get.snackbar(
-        'Error',
-        'Invalid username or password',
+        'ত্রুটি',
+        'ইউজারনেম বা পাসওয়ার্ড সঠিক নয়',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -145,7 +147,7 @@ class LoginPage extends GetView<AuthController> {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Create First User'),
+        title: const Text('প্রথম ইউজার তৈরি করুন'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -153,7 +155,7 @@ class LoginPage extends GetView<AuthController> {
               TextField(
                 controller: usernameController,
                 decoration: const InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'ইউজারনেম',
                   prefixIcon: Icon(Icons.person),
                 ),
               ),
@@ -161,7 +163,7 @@ class LoginPage extends GetView<AuthController> {
               TextField(
                 controller: passwordController,
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'পাসওয়ার্ড',
                   prefixIcon: Icon(Icons.lock),
                 ),
                 obscureText: true,
@@ -170,7 +172,7 @@ class LoginPage extends GetView<AuthController> {
               TextField(
                 controller: confirmPasswordController,
                 decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
+                  labelText: 'কনফার্ম পাসওয়ার্ড',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
                 obscureText: true,
@@ -181,15 +183,15 @@ class LoginPage extends GetView<AuthController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () async {
               if (usernameController.text.isEmpty ||
                   passwordController.text.isEmpty) {
                 Get.snackbar(
-                  'Error',
-                  'Please fill all fields',
+                  'ত্রুটি',
+                  'সব ঘর পূরণ করুন',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
@@ -199,8 +201,8 @@ class LoginPage extends GetView<AuthController> {
 
               if (passwordController.text != confirmPasswordController.text) {
                 Get.snackbar(
-                  'Error',
-                  'Passwords do not match',
+                  'ত্রুটি',
+                  'পাসওয়ার্ড মিলছে না',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
@@ -218,15 +220,15 @@ class LoginPage extends GetView<AuthController> {
                 Get.offAllNamed('/');
               } else {
                 Get.snackbar(
-                  'Error',
-                  'Failed to create user',
+                  'ত্রুটি',
+                  'ইউজার তৈরি করা যায়নি',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
                 );
               }
             },
-            child: const Text('Create'),
+            child: const Text('তৈরি করুন'),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/customer_controller.dart';
 import '../controllers/entry_controller.dart';
 import '../widgets/dashboard_card.dart';
@@ -37,7 +38,7 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Dashboard',
+                'ড্যাশবোর্ড',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -51,28 +52,28 @@ class HomePage extends StatelessWidget {
                     crossAxisSpacing: 16,
                     children: [
                       DashboardCard(
-                        title: 'Customers',
+                        title: 'কাস্টমার',
                         count: customerController.customers.length.toString(),
                         icon: Icons.people,
                         color: Colors.blue,
                         onTap: () => Get.toNamed('/customers'),
                       ),
                       DashboardCard(
-                        title: 'Entries',
+                        title: 'এন্ট্রি',
                         count: entryController.entries.length.toString(),
                         icon: Icons.receipt_long,
                         color: Colors.green,
                         onTap: () => Get.toNamed('/entries'),
                       ),
                       DashboardCard(
-                        title: 'Credits',
+                        title: 'ক্রেডিট',
                         count: _getCreditsCount(entryController.entries),
                         icon: Icons.add_circle,
                         color: Colors.teal,
                         onTap: () => Get.toNamed('/entries'),
                       ),
                       DashboardCard(
-                        title: 'Debits',
+                        title: 'ডেবিট',
                         count: _getDebitsCount(entryController.entries),
                         icon: Icons.remove_circle,
                         color: Colors.orange,
@@ -82,7 +83,7 @@ class HomePage extends StatelessWidget {
                   )),
               const SizedBox(height: 24),
               Text(
-                'Quick Actions',
+                'দ্রুত অ্যাকশন',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -103,22 +104,22 @@ class HomePage extends StatelessWidget {
       children: [
         ActionChip(
           avatar: const Icon(Icons.person_add),
-          label: const Text('Add Customer'),
+          label: const Text('কাস্টমার যোগ করুন'),
           onPressed: () => Get.toNamed('/customers'),
         ),
         ActionChip(
           avatar: const Icon(Icons.add),
-          label: const Text('Add Entry'),
+          label: const Text('এন্ট্রি যোগ করুন'),
           onPressed: () => Get.toNamed('/entries'),
         ),
         ActionChip(
           avatar: const Icon(Icons.upload_file),
-          label: const Text('Import CSV'),
+          label: const Text('CSV ইম্পোর্ট করুন'),
           onPressed: () => _showImportDialog(context),
         ),
         ActionChip(
           avatar: const Icon(Icons.picture_as_pdf),
-          label: const Text('Export PDF'),
+          label: const Text('PDF এক্সপোর্ট করুন'),
           onPressed: () => _showExportDialog(context),
         ),
       ],
@@ -135,24 +136,24 @@ class HomePage extends StatelessWidget {
 
   void _showSearch(BuildContext context) {
     Get.snackbar(
-      'Search',
-      'Search functionality coming soon',
+      'সার্চ',
+      'সার্চ ফিচার শিগগিরই আসছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   void _showImportDialog(BuildContext context) {
     Get.snackbar(
-      'Import CSV',
-      'CSV import functionality available in Customers page',
+      'CSV ইম্পোর্ট',
+      'Customers পেজ থেকে CSV ইম্পোর্ট করুন',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   void _showExportDialog(BuildContext context) {
     Get.snackbar(
-      'Export PDF',
-      'PDF export functionality available in Entries page',
+      'PDF এক্সপোর্ট',
+      'Entries পেজ থেকে PDF এক্সপোর্ট করুন',
       snackPosition: SnackPosition.BOTTOM,
     );
   }

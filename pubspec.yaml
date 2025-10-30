@@ -1,5 +1,5 @@
 name: ledgerx
-description: Flutter offline-first ledger app with GetX, SQLite, AES encryption, and comprehensive features.
+description: Flutter offline-first ledger app with GetX, Drift-backed SQLite storage, and comprehensive features.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,18 +9,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   
   # State Management, Routing, DI
   get: ^4.6.6
   
   # Database
-  sqflite_common_ffi: ^2.3.0
-  sqflite_common_ffi_web: ^1.0.0
+  drift: ^2.29.0
+  sqlite3_flutter_libs: ^0.5.24
   path: ^1.8.3
   path_provider: ^2.1.1
   
-  # Encryption
-  encrypt: ^5.0.3
+  # Encryption / hashing
   crypto: ^3.0.3
   
   # PDF Generation
@@ -64,6 +65,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mockito: ^5.4.4
   build_runner: ^2.4.7
+  drift_dev: ^2.29.0
 
 flutter:
   uses-material-design: true

@@ -26,9 +26,9 @@ flutter pub get
 
 This will download all required packages including:
 - GetX for state management
-- SQLite for local database
-- Encryption libraries
+- Drift ORM + sqlite3_flutter_libs for the local database
 - PDF generation tools
+- CSV utilities and file pickers
 - And more...
 
 ### 3. Run the Application

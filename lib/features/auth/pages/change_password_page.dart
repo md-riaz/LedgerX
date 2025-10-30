@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/auth_controller.dart';
 
 class ChangePasswordPage extends GetView<AuthController> {
@@ -14,7 +15,7 @@ class ChangePasswordPage extends GetView<AuthController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Change Password'),
+        title: const Text('পাসওয়ার্ড পরিবর্তন'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -22,12 +23,12 @@ class ChangePasswordPage extends GetView<AuthController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Change Your Password',
+              'আপনার পাসওয়ার্ড পরিবর্তন করুন',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'Enter your current password and choose a new one',
+              'বর্তমান পাসওয়ার্ড লিখে নতুন পাসওয়ার্ড নির্বাচন করুন',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -36,7 +37,7 @@ class ChangePasswordPage extends GetView<AuthController> {
             TextField(
               controller: oldPasswordController,
               decoration: const InputDecoration(
-                labelText: 'Current Password',
+                labelText: 'বর্তমান পাসওয়ার্ড',
                 prefixIcon: Icon(Icons.lock_outline),
               ),
               obscureText: true,
@@ -45,7 +46,7 @@ class ChangePasswordPage extends GetView<AuthController> {
             TextField(
               controller: newPasswordController,
               decoration: const InputDecoration(
-                labelText: 'New Password',
+                labelText: 'নতুন পাসওয়ার্ড',
                 prefixIcon: Icon(Icons.lock),
               ),
               obscureText: true,
@@ -54,7 +55,7 @@ class ChangePasswordPage extends GetView<AuthController> {
             TextField(
               controller: confirmPasswordController,
               decoration: const InputDecoration(
-                labelText: 'Confirm New Password',
+                labelText: 'নতুন পাসওয়ার্ড নিশ্চিত করুন',
                 prefixIcon: Icon(Icons.lock),
               ),
               obscureText: true,
@@ -78,7 +79,7 @@ class ChangePasswordPage extends GetView<AuthController> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Change Password'),
+                        : const Text('পাসওয়ার্ড পরিবর্তন করুন'),
                   ),
                 )),
           ],
@@ -95,8 +96,8 @@ class ChangePasswordPage extends GetView<AuthController> {
   ) async {
     if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
       Get.snackbar(
-        'Error',
-        'Please fill all fields',
+        'ত্রুটি',
+        'সব ঘর পূরণ করুন',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -106,8 +107,8 @@ class ChangePasswordPage extends GetView<AuthController> {
 
     if (newPassword != confirmPassword) {
       Get.snackbar(
-        'Error',
-        'New passwords do not match',
+        'ত্রুটি',
+        'নতুন পাসওয়ার্ড মিলছে না',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -117,8 +118,8 @@ class ChangePasswordPage extends GetView<AuthController> {
 
     if (newPassword.length < 4) {
       Get.snackbar(
-        'Error',
-        'Password must be at least 4 characters',
+        'ত্রুটি',
+        'পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -133,16 +134,16 @@ class ChangePasswordPage extends GetView<AuthController> {
     if (success) {
       Get.back();
       Get.snackbar(
-        'Success',
-        'Password changed successfully',
+        'সফল',
+        'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
     } else {
       Get.snackbar(
-        'Error',
-        'Current password is incorrect',
+        'ত্রুটি',
+        'বর্তমান পাসওয়ার্ড সঠিক নয়',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

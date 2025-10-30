@@ -1,8 +1,13 @@
+import 'package:drift/drift.dart';
+
 import '../../domain/entities/audit_log.dart';
-import '../datasources/database_helper.dart';
+import '../datasources/ledger_database.dart';
 
 class AuditRepositoryImpl {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  AuditRepositoryImpl({LedgerDatabase? database})
+      : _db = database ?? LedgerDatabase();
+
+  final LedgerDatabase _db;
 
   Future<int> logAction({
     required String action,
@@ -10,58 +15,73 @@ class AuditRepositoryImpl {
     int? entityId,
     String? details,
   }) async {
-    final db = await _dbHelper.database;
-    final log = AuditLog(
-      action: action,
-      entityType: entityType,
-      entityId: entityId,
-      details: details,
-    );
-    return await db.insert('audit_logs', log.toMap());
+    final now = DateTime.now();
+    return await _db.into(_db.dbAuditLogs).insert(
+          DbAuditLogsCompanion.insert(
+            action: action,
+            entityType: entityType,
+            entityId: entityId == null ? const Value.absent() : Value(entityId),
+            details: details == null ? const Value.absent() : Value(details),
+            createdAt: Value(now),
+          ),
+        );
   }
 
   Future<List<AuditLog>> getAllLogs() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'audit_logs',
-      orderBy: 'created_at DESC',
-      limit: 1000,
-    );
-    return List.generate(maps.length, (i) => AuditLog.fromMap(maps[i]));
+    final query = _db.select(_db.dbAuditLogs)
+      ..orderBy([
+        (tbl) =>
+            OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+      ])
+      ..limit(1000);
+
+    final rows = await query.get();
+    return rows.map(_mapAuditLog).toList();
   }
 
   Future<List<AuditLog>> getLogsByEntity({
     required String entityType,
     int? entityId,
   }) async {
-    final db = await _dbHelper.database;
-    String where = 'entity_type = ?';
-    List<dynamic> whereArgs = [entityType];
-    
+    final query = _db.select(_db.dbAuditLogs)
+      ..where((tbl) => tbl.entityType.equals(entityType));
+
     if (entityId != null) {
-      where += ' AND entity_id = ?';
-      whereArgs.add(entityId);
+      query.where((tbl) => tbl.entityId.equals(entityId));
     }
-    
-    final List<Map<String, dynamic>> maps = await db.query(
-      'audit_logs',
-      where: where,
-      whereArgs: whereArgs,
-      orderBy: 'created_at DESC',
-    );
-    return List.generate(maps.length, (i) => AuditLog.fromMap(maps[i]));
+
+    query.orderBy([
+      (tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+    ]);
+
+    final rows = await query.get();
+    return rows.map(_mapAuditLog).toList();
   }
 
   Future<Map<String, int>> getActionStats() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> result = await db.rawQuery(
-      'SELECT action, COUNT(*) as count FROM audit_logs GROUP BY action',
-    );
-    
+    final rows = await _db
+        .customSelect(
+          'SELECT action, COUNT(*) AS count FROM db_audit_logs GROUP BY action',
+        )
+        .get();
+
     final stats = <String, int>{};
-    for (var row in result) {
-      stats[row['action'] as String] = row['count'] as int;
+    for (final row in rows) {
+      final action = row.read<String>('action');
+      final count = row.read<int>('count');
+      stats[action] = count;
     }
     return stats;
+  }
+
+  AuditLog _mapAuditLog(DbAuditLog row) {
+    return AuditLog(
+      id: row.id,
+      action: row.action,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      details: row.details,
+      createdAt: row.createdAt,
+    );
   }
 }

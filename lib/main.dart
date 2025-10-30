@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
-import 'data/datasources/database_helper.dart';
+import 'data/datasources/ledger_database.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/pages/login_page.dart';
 import 'features/customers/controllers/customer_controller.dart';
@@ -36,29 +35,12 @@ void main() async {
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
 
-  // Initialize FFI for desktop platforms
-  if (PlatformUtils.isWeb) {
-    databaseFactory = createDatabaseFactoryFfiWeb(
-      options: SqfliteFfiWebOptions(
-        sharedWorkerUri: Uri.parse(
-          'assets/packages/sqflite_common_ffi_web/assets/sqflite_sw.js',
-        ),
-        sqlite3WasmUri: Uri.parse(
-          'assets/packages/sqflite_common_ffi_web/assets/sqlite3.wasm',
-        ),
-      ),
-    );
-  } else if (PlatformUtils.isDesktop) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
-
-  // Initialize database
-  await DatabaseHelper.instance.database;
+  final database = LedgerDatabase();
+  await database.warmUp();
+  Get.put<LedgerDatabase>(database, permanent: true);
 
   if (PlatformUtils.isWeb) {
-    debugPrint(
-        'LedgerX: Local notifications are not supported on the web yet.');
+    debugPrint('LedgerX: ওয়েবে লোকাল নোটিফিকেশন এখনো সমর্থিত নয়।');
   } else {
     // Initialize notifications
     const initializationSettings = InitializationSettings(
@@ -92,6 +74,14 @@ class LedgerXApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'LedgerX',
+      locale: const Locale('bn', 'BD'),
+      fallbackLocale: const Locale('bn', 'BD'),
+      supportedLocales: const [Locale('bn', 'BD')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,

@@ -13,7 +13,7 @@ class AuditLogsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Audit Logs'),
+        title: const Text('অডিট লগ'),
       ),
       body: FutureBuilder<List<AuditLog>>(
         future: repository.getAllLogs(),
@@ -24,7 +24,7 @@ class AuditLogsPage extends StatelessWidget {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error: ${snapshot.error}'),
+              child: Text('ত্রুটি: ${snapshot.error}'),
             );
           }
 
@@ -32,7 +32,7 @@ class AuditLogsPage extends StatelessWidget {
 
           if (logs.isEmpty) {
             return const Center(
-              child: Text('No audit logs found'),
+              child: Text('কোনো অডিট লগ পাওয়া যায়নি'),
             );
           }
 
@@ -75,7 +75,7 @@ class AuditLogsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Activity Overview',
+            'কার্যকলাপ সংক্ষিপ্তসার',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,

@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ledgerx/data/datasources/database_helper.dart';
+import 'package:ledgerx/data/datasources/ledger_database.dart';
 import 'package:ledgerx/presentation/controllers/theme_controller.dart';
 import 'package:ledgerx/presentation/pages/audit_logs_page.dart';
 
@@ -14,7 +14,7 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('সেটিংস'),
       ),
       body: ListView(
         children: [
@@ -22,7 +22,7 @@ class SettingsPage extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Appearance',
+              'চেহারা',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -31,8 +31,8 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           Obx(() => SwitchListTile(
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Toggle dark/light theme'),
+                title: const Text('ডার্ক মোড'),
+                subtitle: const Text('ডার্ক ও লাইট থিম পরিবর্তন করুন'),
                 value: themeController.themeMode.value == ThemeMode.dark,
                 onChanged: (value) {
                   themeController.setThemeMode(
@@ -49,7 +49,7 @@ class SettingsPage extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Data',
+              'ডেটা',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -59,21 +59,21 @@ class SettingsPage extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.backup),
-            title: const Text('Backup Data'),
-            subtitle: const Text('Export database to file'),
+            title: const Text('ডেটা ব্যাকআপ'),
+            subtitle: const Text('ডাটাবেস ফাইল হিসেবে সংরক্ষণ করুন'),
             onTap: () => _backupData(context),
           ),
           ListTile(
             leading: const Icon(Icons.restore),
-            title: const Text('Restore Data'),
-            subtitle: const Text('Import database from file'),
+            title: const Text('ডেটা পুনরুদ্ধার'),
+            subtitle: const Text('ফাইল থেকে ডাটাবেস ইম্পোর্ট করুন'),
             onTap: () => _restoreData(context),
           ),
           const Divider(),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Audit',
+              'অডিট',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -83,8 +83,8 @@ class SettingsPage extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.history),
-            title: const Text('Audit Logs'),
-            subtitle: const Text('View activity history'),
+            title: const Text('অডিট লগ'),
+            subtitle: const Text('কার্যকলাপের ইতিহাস দেখুন'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showAuditLogs(context),
           ),
@@ -92,7 +92,7 @@ class SettingsPage extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'About',
+              'পরিচিতি',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -102,14 +102,14 @@ class SettingsPage extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.info),
-            title: const Text('About LedgerX'),
-            subtitle: const Text('Version 1.0.0'),
+            title: const Text('LedgerX সম্পর্কে'),
+            subtitle: const Text('ভার্সন 1.0.0'),
             onTap: () => _showAboutDialog(context),
           ),
           ListTile(
             leading: const Icon(Icons.description),
-            title: const Text('License'),
-            subtitle: const Text('View license information'),
+            title: const Text('লাইসেন্স'),
+            subtitle: const Text('লাইসেন্সের তথ্য দেখুন'),
             onTap: () => _showLicenseDialog(context),
           ),
           const SizedBox(height: 16),
@@ -120,22 +120,20 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _backupData(BuildContext context) async {
     try {
-      final dbHelper = DatabaseHelper.instance;
-      final db = await dbHelper.database;
-
-      // Get the database path
-      final dbPath = db.path;
+      final dbPath = await LedgerDatabase().resolvedDatabasePath();
 
       Get.snackbar(
-        'Backup',
-        'Database path: $dbPath\nBackup functionality will copy this file to your selected location.',
+        'ব্যাকআপ',
+        dbPath == null
+            ? 'ওয়েবে IndexedDB এর মাধ্যমে ডেটা রাখা হয়। ওয়েবে ব্যাকআপ/এক্সপোর্ট এখনো তৈরি হয়নি।'
+            : 'ডাটাবেস পথ: $dbPath\nব্যাকআপ ফাংশন এই ফাইলটি আপনার নির্বাচিত স্থানে কপি করবে।',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 5),
       );
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Failed to backup data: ${e.toString()}',
+        'ত্রুটি',
+        'ডেটা ব্যাকআপ করা যায়নি: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -152,15 +150,15 @@ class SettingsPage extends StatelessWidget {
 
       if (result != null) {
         Get.snackbar(
-          'Restore',
-          'Restore functionality will replace the current database with the selected file.',
+          'রিস্টোর',
+          'রিস্টোর ফাংশন নির্বাচিত ফাইল দিয়ে বর্তমান ডাটাবেস প্রতিস্থাপন করবে।',
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Failed to restore data: ${e.toString()}',
+        'ত্রুটি',
+        'ডেটা রিস্টোর করা যায়নি: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -175,7 +173,7 @@ class SettingsPage extends StatelessWidget {
   void _showAboutDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        title: const Text('About LedgerX'),
+        title: const Text('LedgerX সম্পর্কে'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,24 +183,24 @@ class SettingsPage extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text('Version 1.0.0'),
+            Text('ভার্সন 1.0.0'),
             SizedBox(height: 16),
             Text(
-              'A Flutter offline-first ledger application with:',
+              'একটি Flutter অফলাইন-ফার্স্ট লেজার অ্যাপ যেটিতে রয়েছে:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
-              '• GetX state management\n'
-              '• SQLite database with AES encryption\n'
-              '• Customer & entry management\n'
-              '• CSV import/export\n'
-              '• PDF generation\n'
-              '• Local notifications\n'
-              '• Backup/restore\n'
-              '• Dark/light themes\n'
-              '• Audit logging\n'
-              '• And more...',
+              '• GetX স্টেট ম্যানেজমেন্ট\n'
+              '• Drift-সমর্থিত SQLite স্টোরেজ ও হ্যাশড ক্রেডেনশিয়াল\n'
+              '• কাস্টমার ও এন্ট্রি ম্যানেজমেন্ট\n'
+              '• CSV ইম্পোর্ট/এক্সপোর্ট\n'
+              '• PDF জেনারেশন\n'
+              '• লোকাল নোটিফিকেশন\n'
+              '• ব্যাকআপ/রিস্টোর\n'
+              '• ডার্ক/লাইট থিম\n'
+              '• অডিট লগিং\n'
+              '• আরও অনেক কিছু...',
               style: TextStyle(fontSize: 14),
             ),
           ],
@@ -210,7 +208,7 @@ class SettingsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: const Text('বন্ধ করুন'),
           ),
         ],
       ),
@@ -220,7 +218,7 @@ class SettingsPage extends StatelessWidget {
   void _showLicenseDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        title: const Text('License'),
+        title: const Text('লাইসেন্স'),
         content: const SingleChildScrollView(
           child: Text(
             'MIT License\n\n'
@@ -246,7 +244,7 @@ class SettingsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: const Text('বন্ধ করুন'),
           ),
         ],
       ),

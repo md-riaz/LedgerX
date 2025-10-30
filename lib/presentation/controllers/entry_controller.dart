@@ -1,10 +1,11 @@
 import 'package:get/get.dart';
-import '../../domain/entities/entry.dart';
+
 import '../../data/repositories/entry_repository_impl.dart';
+import '../../domain/entities/entry.dart';
 
 class EntryController extends GetxController {
   final EntryRepositoryImpl _repository = EntryRepositoryImpl();
-  
+
   final RxList<Entry> entries = <Entry>[].obs;
   final RxList<Entry> filteredEntries = <Entry>[].obs;
   final RxBool isLoading = false.obs;
@@ -21,7 +22,8 @@ class EntryController extends GetxController {
     try {
       isLoading.value = true;
       if (selectedCustomerId.value != null) {
-        entries.value = await _repository.getEntriesByCustomer(selectedCustomerId.value!);
+        entries.value =
+            await _repository.getEntriesByCustomer(selectedCustomerId.value!);
       } else {
         entries.value = await _repository.getAllEntries();
       }
@@ -41,8 +43,8 @@ class EntryController extends GetxController {
     await loadEntries();
     Get.back();
     Get.snackbar(
-      'Success',
-      'Entry created successfully',
+      'সফল',
+      'এন্ট্রি সফলভাবে যোগ হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -52,8 +54,8 @@ class EntryController extends GetxController {
     await loadEntries();
     Get.back();
     Get.snackbar(
-      'Success',
-      'Entry updated successfully',
+      'সফল',
+      'এন্ট্রি সফলভাবে হালনাগাদ হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -62,8 +64,8 @@ class EntryController extends GetxController {
     await _repository.deleteEntry(id);
     await loadEntries();
     Get.snackbar(
-      'Success',
-      'Entry deleted successfully',
+      'সফল',
+      'এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -79,8 +81,10 @@ class EntryController extends GetxController {
     } else {
       filteredEntries.value = entries
           .where((entry) =>
-              entry.description?.toLowerCase().contains(query.toLowerCase()) ?? false ||
-              entry.tags.any((tag) => tag.toLowerCase().contains(query.toLowerCase())))
+              entry.description?.toLowerCase().contains(query.toLowerCase()) ??
+              false ||
+                  entry.tags.any(
+                      (tag) => tag.toLowerCase().contains(query.toLowerCase())))
           .toList();
     }
   }

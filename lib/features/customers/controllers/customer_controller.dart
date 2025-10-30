@@ -1,11 +1,10 @@
 import 'package:get/get.dart';
-
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
 
 class CustomerController extends GetxController {
   final CustomerRepositoryImpl _repository = CustomerRepositoryImpl();
-  
+
   final RxList<Customer> customers = <Customer>[].obs;
   final RxList<Customer> filteredCustomers = <Customer>[].obs;
   final RxBool isLoading = false.obs;
@@ -32,8 +31,8 @@ class CustomerController extends GetxController {
     await loadCustomers();
     Get.back();
     Get.snackbar(
-      'Success',
-      'Customer created successfully',
+      'সফল',
+      'কাস্টমার সফলভাবে যোগ হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -43,8 +42,8 @@ class CustomerController extends GetxController {
     await loadCustomers();
     Get.back();
     Get.snackbar(
-      'Success',
-      'Customer updated successfully',
+      'সফল',
+      'কাস্টমার সফলভাবে হালনাগাদ হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -53,8 +52,8 @@ class CustomerController extends GetxController {
     await _repository.deleteCustomer(id);
     await loadCustomers();
     Get.snackbar(
-      'Success',
-      'Customer deleted successfully',
+      'সফল',
+      'কাস্টমার সফলভাবে মুছে ফেলা হয়েছে',
       snackPosition: SnackPosition.BOTTOM,
     );
   }

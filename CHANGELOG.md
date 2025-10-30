@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Customer management with CRUD operations
 - Credit/Debit entry tracking
 - Running balance calculation per customer
-- SQLite database with AES encryption
+- Drift-backed SQLite database
 - Audit logging system with visualization
 - CSV import/export for customers
 - PDF invoice and report generation
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Print reports directly
 
 #### Security
-- AES file encryption for database
+- Drift-backed SQLite storage with hashed credentials
 - Audit logging for all operations
 - Secure local storage
 
@@ -78,8 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Dependencies
 - Flutter 3.0+
 - GetX 4.6+ for state management
-- sqflite_common_ffi 2.3+ for database
-- encrypt 5.0+ for encryption
+- drift 2.29+ for database access
+- sqlite3_flutter_libs 0.5+ for bundled SQLite runtime
+- crypto 3.0+ for hashing
 - pdf 3.10+ for PDF generation
 - csv 5.1+ for CSV processing
 - flutter_local_notifications 16.3+ for notifications

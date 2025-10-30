@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../domain/entities/customer.dart';
 import '../controllers/customer_controller.dart';
 
@@ -10,7 +11,7 @@ class CustomerListPage extends GetView<CustomerController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customers'),
+        title: const Text('কাস্টমার'),
       ),
       body: Column(
         children: [
@@ -18,7 +19,7 @@ class CustomerListPage extends GetView<CustomerController> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: const InputDecoration(
-                hintText: 'Search by name or phone...',
+                hintText: 'নাম বা ফোন দিয়ে সার্চ করুন...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
@@ -43,14 +44,14 @@ class CustomerListPage extends GetView<CustomerController> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No customers found',
+                        'কোনো কাস্টমার পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Add your first customer to get started',
+                        'শুরু করতে প্রথম কাস্টমার যোগ করুন',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[500],
                             ),
@@ -95,7 +96,8 @@ class CustomerListPage extends GetView<CustomerController> {
                             onPressed: () => _showEditCustomerDialog(customer),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            icon: const Icon(Icons.delete,
+                                color: Colors.red, size: 20),
                             onPressed: () => _confirmDelete(customer),
                           ),
                         ],
@@ -112,7 +114,7 @@ class CustomerListPage extends GetView<CustomerController> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddCustomerDialog,
         icon: const Icon(Icons.add),
-        label: const Text('Add Customer'),
+        label: const Text('কাস্টমার যোগ করুন'),
       ),
     );
   }
@@ -125,7 +127,7 @@ class CustomerListPage extends GetView<CustomerController> {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Add Customer'),
+        title: const Text('কাস্টমার যোগ করুন'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -133,8 +135,8 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Name *',
-                  hintText: 'Customer name',
+                  labelText: 'নাম *',
+                  hintText: 'কাস্টমারের নাম',
                   prefixIcon: Icon(Icons.person),
                 ),
                 textCapitalization: TextCapitalization.words,
@@ -144,8 +146,8 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: phoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  hintText: 'Contact number',
+                  labelText: 'ফোন',
+                  hintText: 'যোগাযোগ নম্বর',
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
@@ -154,8 +156,8 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Customer address',
+                  labelText: 'ঠিকানা',
+                  hintText: 'কাস্টমারের ঠিকানা',
                   prefixIcon: Icon(Icons.location_on),
                 ),
                 maxLines: 2,
@@ -164,8 +166,8 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: notesController,
                 decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  hintText: 'Additional information',
+                  labelText: 'নোট',
+                  hintText: 'অতিরিক্ত তথ্য',
                   prefixIcon: Icon(Icons.note),
                 ),
                 maxLines: 2,
@@ -176,14 +178,14 @@ class CustomerListPage extends GetView<CustomerController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
                 Get.snackbar(
-                  'Error',
-                  'Please enter customer name',
+                  'ত্রুটি',
+                  'কাস্টমারের নাম লিখুন',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
@@ -193,13 +195,19 @@ class CustomerListPage extends GetView<CustomerController> {
 
               final customer = Customer(
                 name: nameController.text.trim(),
-                phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
-                address: addressController.text.trim().isEmpty ? null : addressController.text.trim(),
-                notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                phone: phoneController.text.trim().isEmpty
+                    ? null
+                    : phoneController.text.trim(),
+                address: addressController.text.trim().isEmpty
+                    ? null
+                    : addressController.text.trim(),
+                notes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
               );
               controller.createCustomer(customer);
             },
-            child: const Text('Add'),
+            child: const Text('যোগ করুন'),
           ),
         ],
       ),
@@ -214,7 +222,7 @@ class CustomerListPage extends GetView<CustomerController> {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Edit Customer'),
+        title: const Text('কাস্টমার সম্পাদনা করুন'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -222,7 +230,7 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Name *',
+                  labelText: 'নাম *',
                   prefixIcon: Icon(Icons.person),
                 ),
                 textCapitalization: TextCapitalization.words,
@@ -231,7 +239,7 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: phoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone',
+                  labelText: 'ফোন',
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
@@ -240,7 +248,7 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Address',
+                  labelText: 'ঠিকানা',
                   prefixIcon: Icon(Icons.location_on),
                 ),
                 maxLines: 2,
@@ -249,7 +257,7 @@ class CustomerListPage extends GetView<CustomerController> {
               TextField(
                 controller: notesController,
                 decoration: const InputDecoration(
-                  labelText: 'Notes',
+                  labelText: 'নোট',
                   prefixIcon: Icon(Icons.note),
                 ),
                 maxLines: 2,
@@ -260,14 +268,14 @@ class CustomerListPage extends GetView<CustomerController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
                 Get.snackbar(
-                  'Error',
-                  'Please enter customer name',
+                  'ত্রুটি',
+                  'কাস্টমারের নাম লিখুন',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
@@ -277,13 +285,19 @@ class CustomerListPage extends GetView<CustomerController> {
 
               final updatedCustomer = customer.copyWith(
                 name: nameController.text.trim(),
-                phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
-                address: addressController.text.trim().isEmpty ? null : addressController.text.trim(),
-                notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                phone: phoneController.text.trim().isEmpty
+                    ? null
+                    : phoneController.text.trim(),
+                address: addressController.text.trim().isEmpty
+                    ? null
+                    : addressController.text.trim(),
+                notes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
               );
               controller.updateCustomer(updatedCustomer);
             },
-            child: const Text('Save'),
+            child: const Text('সংরক্ষণ করুন'),
           ),
         ],
       ),
@@ -308,7 +322,8 @@ class CustomerListPage extends GetView<CustomerController> {
                   radius: 32,
                   child: Text(
                     customer.name[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -336,11 +351,11 @@ class CustomerListPage extends GetView<CustomerController> {
             ),
             const Divider(height: 32),
             if (customer.address != null) ...[
-              _buildDetailRow(Icons.location_on, 'Address', customer.address!),
+              _buildDetailRow(Icons.location_on, 'ঠিকানা', customer.address!),
               const SizedBox(height: 12),
             ],
             if (customer.notes != null) ...[
-              _buildDetailRow(Icons.note, 'Notes', customer.notes!),
+              _buildDetailRow(Icons.note, 'নোট', customer.notes!),
               const SizedBox(height: 12),
             ],
             const SizedBox(height: 16),
@@ -352,7 +367,7 @@ class CustomerListPage extends GetView<CustomerController> {
                   Get.toNamed('/entries', arguments: customer.id);
                 },
                 icon: const Icon(Icons.receipt_long),
-                label: const Text('View Entries'),
+                label: const Text('এন্ট্রি দেখুন'),
               ),
             ),
           ],
@@ -392,12 +407,12 @@ class CustomerListPage extends GetView<CustomerController> {
   void _confirmDelete(Customer customer) {
     Get.dialog(
       AlertDialog(
-        title: const Text('Delete Customer'),
-        content: Text('Are you sure you want to delete ${customer.name}?'),
+        title: const Text('কাস্টমার মুছে ফেলুন'),
+        content: Text('${customer.name} কাস্টমারকে কি মুছে ফেলতে চান?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -405,7 +420,7 @@ class CustomerListPage extends GetView<CustomerController> {
               controller.deleteCustomer(customer.id!);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('মুছে ফেলুন'),
           ),
         ],
       ),

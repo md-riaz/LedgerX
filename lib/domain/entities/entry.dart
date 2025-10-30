@@ -49,7 +49,11 @@ class Entry {
       amount: (map['amount'] as num).toDouble(),
       description: map['description'] as String?,
       date: DateTime.parse(map['date'] as String),
-      tags: (map['tags'] as String?)?.split(',').where((t) => t.isNotEmpty).toList() ?? [],
+      tags: (map['tags'] as String?)
+              ?.split(',')
+              .where((t) => t.isNotEmpty)
+              .toList() ??
+          [],
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );

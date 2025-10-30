@@ -18,16 +18,19 @@ class KeyboardShortcuts extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.keyH, control: true): () {
           Get.offAllNamed('/');
         },
-        const SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true): () {
+        const SingleActivator(LogicalKeyboardKey.keyC,
+            control: true, shift: true): () {
           Get.toNamed('/customers');
         },
-        const SingleActivator(LogicalKeyboardKey.keyE, control: true, shift: true): () {
+        const SingleActivator(LogicalKeyboardKey.keyE,
+            control: true, shift: true): () {
           Get.toNamed('/entries');
         },
-        const SingleActivator(LogicalKeyboardKey.keyS, control: true, shift: true): () {
+        const SingleActivator(LogicalKeyboardKey.keyS,
+            control: true, shift: true): () {
           Get.toNamed('/settings');
         },
-        
+
         // Quick actions
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
           // Show add dialog based on current page
@@ -41,7 +44,7 @@ class KeyboardShortcuts extends StatelessWidget {
           // Toggle theme
           _toggleTheme();
         },
-        
+
         // Help
         const SingleActivator(LogicalKeyboardKey.f1): () {
           _showKeyboardShortcuts();

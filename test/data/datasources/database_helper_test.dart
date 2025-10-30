@@ -1,21 +1,53 @@
-import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ledgerx/data/datasources/database_helper.dart';
+import 'package:ledgerx/data/datasources/ledger_database.dart';
 
 void main() {
-  group('DatabaseHelper encryption', () {
-    final helper = DatabaseHelper.instance;
+  group('LedgerDatabase', () {
+    late LedgerDatabase database;
 
-    test('encryptData uses a 256-bit key and yields base64 output', () {
-      const sample = 'Sensitive payload';
+    setUp(() {
+      database = LedgerDatabase.forTesting(NativeDatabase.memory());
+    });
 
-      late final String encrypted;
-      expect(() => encrypted = helper.encryptData(sample), returnsNormally);
-      expect(encrypted, isNotEmpty);
-      expect(RegExp(r'^[A-Za-z0-9+/]+={0,2}$').hasMatch(encrypted), isTrue);
+    tearDown(() async {
+      await database.close();
+    });
 
-      final key = encrypt.Key.fromUtf8('ledgerx_secure_key_32_chars!!!!!');
-      expect(key.bytes.length, 32);
+    test('creates tables and persists customers', () async {
+      final id = await database.into(database.dbCustomers).insert(
+            DbCustomersCompanion.insert(name: 'Alice'),
+          );
+
+      final row = await (database.select(database.dbCustomers)
+            ..where((tbl) => tbl.id.equals(id)))
+          .getSingle();
+
+      expect(row.name, 'Alice');
+    });
+
+    test('supports inserting ledger entries', () async {
+      final customerId = await database.into(database.dbCustomers).insert(
+            DbCustomersCompanion.insert(name: 'Bob'),
+          );
+
+      final entryId = await database.into(database.dbEntries).insert(
+            DbEntriesCompanion.insert(
+              customerId: customerId,
+              type: 'credit',
+              amount: 120.0,
+              date: Value(DateTime(2024, 1, 1)),
+            ),
+          );
+
+      final entry = await (database.select(database.dbEntries)
+            ..where((tbl) => tbl.id.equals(entryId)))
+          .getSingle();
+
+      expect(entry.customerId, customerId);
+      expect(entry.amount, 120.0);
+      expect(entry.type, 'credit');
     });
   });
 }
