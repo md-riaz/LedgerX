@@ -145,3 +145,4 @@ test-results/
 
 # Web
 **/web/flutter_service_worker.js
+**/web/*.wasm

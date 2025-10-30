@@ -15,6 +15,7 @@ dependencies:
   
   # Database
   sqflite_common_ffi: ^2.3.0
+  sqflite_common_ffi_web: ^1.0.1+2
   path: ^1.8.3
   path_provider: ^2.1.1
   
@@ -31,6 +32,9 @@ dependencies:
   
   # File Picker
   file_picker: ^6.1.1
+
+  # File saving across platforms
+  file_saver: ^0.2.12
   
   # Notifications
   flutter_local_notifications: ^16.3.0
