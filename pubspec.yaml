@@ -28,40 +28,40 @@ dependencies:
   printing: ^5.11.1
   
   # CSV Import/Export
-  csv: ^5.1.1
+  csv: ^6.0.0
   
   # File Picker
-  file_picker: ^6.1.1
+  file_picker: ^10.3.3
 
   # File saving across platforms
-  file_saver: ^0.2.12
+  file_saver: ^0.3.1
   
   # Notifications
-  flutter_local_notifications: ^16.3.0
-  timezone: ^0.9.2
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
   
   # Icons
   cupertino_icons: ^1.0.6
   
   # Date/Time
-  intl: ^0.18.1
+  intl: ^0.20.2
   
   # Shared Preferences
   shared_preferences: ^2.2.2
   
   # Charts for visualization
-  fl_chart: ^0.65.0
+  fl_chart: ^1.1.1
   
   # Share functionality
-  share_plus: ^7.2.1
+  share_plus: ^12.0.1
   
   # Permission handling
-  permission_handler: ^11.1.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
   mockito: ^5.4.4
   build_runner: ^2.4.7
 

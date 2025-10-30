@@ -1,27 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 import 'data/datasources/database_helper.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/pages/login_page.dart';
 import 'features/customers/controllers/customer_controller.dart';
 import 'features/customers/pages/customer_list_page.dart';
-import 'presentation/pages/home_page.dart';
-import 'presentation/pages/entry_list_page.dart';
 import 'features/settings/pages/settings_page.dart';
-import 'presentation/themes/app_theme.dart';
-import 'presentation/controllers/theme_controller.dart';
 import 'presentation/controllers/entry_controller.dart';
+import 'presentation/controllers/theme_controller.dart';
+import 'presentation/pages/entry_list_page.dart';
+import 'presentation/pages/home_page.dart';
+import 'presentation/themes/app_theme.dart';
 import 'utils/platform_utils.dart';
+
+const _windowsAppName = 'LedgerX';
+const _windowsAppUserModelId = 'com.ledgerx.app';
+const _windowsGuid = '5a829a22-59c3-4b8f-a8d5-28c8a4630bd8';
 
 final FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin =
     PlatformUtils.isWeb ? null : FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  tzdata.initializeTimeZones();
+  try {
+    tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+  } catch (_) {
+    tz.setLocalLocation(tz.getLocation('UTC'));
+  }
 
   // Initialize FFI for desktop platforms
   if (PlatformUtils.isWeb) {
@@ -44,15 +57,21 @@ void main() async {
   await DatabaseHelper.instance.database;
 
   if (PlatformUtils.isWeb) {
-    debugPrint('LedgerX: Local notifications are not supported on the web yet.');
+    debugPrint(
+        'LedgerX: Local notifications are not supported on the web yet.');
   } else {
     // Initialize notifications
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initializationSettingsIOS = DarwinInitializationSettings();
     const initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+      macOS: DarwinInitializationSettings(),
+      linux:
+          LinuxInitializationSettings(defaultActionName: 'Open notification'),
+      windows: WindowsInitializationSettings(
+        appName: _windowsAppName,
+        appUserModelId: _windowsAppUserModelId,
+        guid: _windowsGuid,
+      ),
     );
 
     await flutterLocalNotificationsPlugin!.initialize(

@@ -425,7 +425,6 @@ class CustomerListPage extends StatelessWidget {
       await FileSaver.instance.saveFile(
         name: fileName,
         bytes: csvBytes,
-        ext: 'csv',
         mimeType: MimeType.csv,
       );
 

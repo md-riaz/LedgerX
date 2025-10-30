@@ -5,6 +5,10 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../domain/entities/reminder.dart';
 import '../../utils/platform_utils.dart';
 
+const _windowsAppName = 'LedgerX';
+const _windowsAppUserModelId = 'com.ledgerx.app';
+const _windowsGuid = '5a829a22-59c3-4b8f-a8d5-28c8a4630bd8';
+
 class NotificationService {
   NotificationService() {
     _logWebWarning();
@@ -20,16 +24,27 @@ class NotificationService {
     }
 
     final notifications = _notifications!;
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    
+    const linuxSettings =
+        LinuxInitializationSettings(defaultActionName: 'Open notification');
+    const windowsSettings = WindowsInitializationSettings(
+      appName: _windowsAppName,
+      appUserModelId: _windowsAppUserModelId,
+      guid: _windowsGuid,
+    );
+
     const initSettings = InitializationSettings(
       android: androidSettings,
-      iOS: iosSettings,
+      iOS: darwinSettings,
+      macOS: darwinSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
     );
 
     await notifications.initialize(
@@ -37,9 +52,19 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Request permissions for iOS
+    // Request permissions for Apple platforms
     await notifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+    await notifications
+        .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(
           alert: true,
           badge: true,
@@ -48,7 +73,8 @@ class NotificationService {
 
     // Request permissions for Android 13+
     await notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
@@ -74,10 +100,16 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
+    const macDetails = DarwinNotificationDetails();
+    const linuxDetails = LinuxNotificationDetails();
+    const windowsDetails = WindowsNotificationDetails();
 
     const notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
+      macOS: macDetails,
+      linux: linuxDetails,
+      windows: windowsDetails,
     );
 
     final scheduledDate = tz.TZDateTime.from(reminder.dueDate, tz.local);
@@ -89,8 +121,6 @@ class NotificationService {
       scheduledDate,
       notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: reminder.id.toString(),
     );
   }
@@ -132,10 +162,16 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
+    const macDetails = DarwinNotificationDetails();
+    const linuxDetails = LinuxNotificationDetails();
+    const windowsDetails = WindowsNotificationDetails();
 
     const notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
+      macOS: macDetails,
+      linux: linuxDetails,
+      windows: windowsDetails,
     );
 
     await _notifications!.show(

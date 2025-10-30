@@ -16,7 +16,8 @@ class DatabaseHelper {
   DatabaseHelper._init();
 
   // Encryption key (in production, this should be securely managed)
-  static const String _encryptionKey = 'ledgerx_secure_key_32_chars!!';
+  // Must remain 32 bytes so AES-256 can derive a valid key
+  static const String _encryptionKey = 'ledgerx_secure_key_32_chars!!!!!';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
