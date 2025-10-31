@@ -21,10 +21,17 @@ class LoginPage extends GetView<AuthController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.account_balance_wallet,
-                  size: 80,
-                  color: Theme.of(context).primaryColor,
+                CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
+                  child: Icon(
+                    Icons.account_balance_wallet,
+                    size: 56,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(

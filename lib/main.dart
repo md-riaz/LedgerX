@@ -40,6 +40,12 @@ void main() async {
   Get.put<LedgerDatabase>(database, permanent: true);
   Get.put<ThemeController>(ThemeController(), permanent: true);
 
+  final authController =
+      Get.put(AuthController(database: database), permanent: true);
+  await authController.restoreSession();
+
+  final initialRoute = authController.isLoggedIn.value ? '/' : '/login';
+
   if (PlatformUtils.isWeb) {
     debugPrint('LedgerX: ওয়েবে লোকাল নোটিফিকেশন এখনো সমর্থিত নয়।');
   } else {
@@ -66,11 +72,13 @@ void main() async {
     );
   }
 
-  runApp(const LedgerXApp());
+  runApp(LedgerXApp(initialRoute: initialRoute));
 }
 
 class LedgerXApp extends StatelessWidget {
-  const LedgerXApp({super.key});
+  const LedgerXApp({super.key, required this.initialRoute});
+
+  final String initialRoute;
 
   @override
   Widget build(BuildContext context) {
