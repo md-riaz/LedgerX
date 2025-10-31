@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
+import 'package:flutter/foundation.dart';
 
 Future<WasmDatabaseResult>? _opening;
 
@@ -14,12 +15,14 @@ QueryExecutor createConnection() {
     ));
 
     if (result.chosenImplementation == WasmStorageImplementation.inMemory) {
-      // Surface a warning in debug consoles so developers know persistence is not available.
-      // ignore: avoid_print
-      print(
-        'Warning: Falling back to an in-memory Drift database because '
-        'persistent storage is unavailable in this browser. Data will not be saved.',
-      );
+      if (kDebugMode) {
+        // Surface a warning in debug consoles so developers know persistence is not available.
+        // ignore: avoid_print
+        print(
+          'Warning: Falling back to an in-memory Drift database because '
+          'persistent storage is unavailable in this browser. Data will not be saved.',
+        );
+      }
     }
 
     return result.resolvedExecutor.executor;
