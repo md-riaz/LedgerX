@@ -134,6 +134,8 @@ app.*.symbols
 # Generated files
 *.g.dart
 *.freezed.dart
+# Allow committed Drift database schema for build reproducibility
+!lib/data/datasources/ledger_database.g.dart
 
 # IDE
 .idea/
