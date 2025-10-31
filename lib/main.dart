@@ -47,8 +47,9 @@ void main() async {
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
       macOS: DarwinInitializationSettings(),
-      linux:
-          LinuxInitializationSettings(defaultActionName: 'Open notification'),
+      linux: LinuxInitializationSettings(
+        defaultActionName: 'Open notification',
+      ),
       windows: WindowsInitializationSettings(
         appName: _windowsAppName,
         appUserModelId: _windowsAppUserModelId,
@@ -108,18 +109,11 @@ class LedgerXApp extends StatelessWidget {
         GetPage(
           name: '/customers',
           page: () => const CustomerListPage(),
-          binding: BindingsBuilder(() {
-            Get.lazyPut(() => CustomerController());
-          }),
           middlewares: [AuthMiddleware()],
         ),
         GetPage(
           name: '/entries',
           page: () => const EntryListPage(),
-          binding: BindingsBuilder(() {
-            Get.lazyPut(() => EntryController());
-            Get.lazyPut(() => CustomerController());
-          }),
           middlewares: [AuthMiddleware()],
         ),
         GetPage(

@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/entry.dart';
-import '../controllers/customer_controller.dart';
+import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
+
 import '../controllers/entry_controller.dart';
 import '../themes/app_theme.dart';
 
@@ -18,7 +19,11 @@ class EntryListPage extends StatelessWidget {
     // Check if a customer ID was passed as argument
     final customerId = Get.arguments as int?;
     if (customerId != null) {
-      controller.loadEntriesByCustomer(customerId);
+      if (controller.selectedCustomerId.value != customerId) {
+        controller.loadEntriesByCustomer(customerId);
+      }
+    } else {
+      controller.clearCustomerFilter();
     }
 
     return Scaffold(
@@ -49,8 +54,9 @@ class EntryListPage extends StatelessWidget {
                 Obx(() {
                   if (controller.selectedCustomerId.value != null) {
                     return FutureBuilder<double>(
-                      future: controller
-                          .getBalance(controller.selectedCustomerId.value!),
+                      future: controller.getBalance(
+                        controller.selectedCustomerId.value!,
+                      ),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           final balance = snapshot.data!;
@@ -112,8 +118,8 @@ class EntryListPage extends StatelessWidget {
                       Text(
                         'কোনো এন্ট্রি পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -161,15 +167,17 @@ class EntryListPage extends StatelessWidget {
                             Wrap(
                               spacing: 4,
                               children: entry.tags
-                                  .map((tag) => Chip(
-                                        label: Text(
-                                          tag,
-                                          style: const TextStyle(fontSize: 10),
-                                        ),
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                        padding: EdgeInsets.zero,
-                                      ))
+                                  .map(
+                                    (tag) => Chip(
+                                      label: Text(
+                                        tag,
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  )
                                   .toList(),
                             ),
                         ],
@@ -215,37 +223,43 @@ class EntryListPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Obx(() => DropdownMenu<int>(
-                    label: const Text('কাস্টমার *'),
-                    initialSelection: selectedCustomerId.value,
-                    dropdownMenuEntries: customerController.customers
-                        .where((customer) => customer.id != null)
-                        .map((customer) => DropdownMenuEntry<int>(
-                              value: customer.id!,
-                              label: customer.name,
-                            ))
-                        .toList(),
-                    onSelected: (value) => selectedCustomerId.value = value,
-                  )),
+              Obx(
+                () => DropdownMenu<int>(
+                  label: const Text('কাস্টমার *'),
+                  initialSelection: selectedCustomerId.value,
+                  dropdownMenuEntries: customerController.customers
+                      .where((customer) => customer.id != null)
+                      .map(
+                        (customer) => DropdownMenuEntry<int>(
+                          value: customer.id!,
+                          label: customer.name,
+                        ),
+                      )
+                      .toList(),
+                  onSelected: (value) => selectedCustomerId.value = value,
+                ),
+              ),
               const SizedBox(height: 16),
-              Obx(() => SegmentedButton<EntryType>(
-                    segments: const [
-                      ButtonSegment(
-                        value: EntryType.credit,
-                        label: Text('ক্রেডিট'),
-                        icon: Icon(Icons.add),
-                      ),
-                      ButtonSegment(
-                        value: EntryType.debit,
-                        label: Text('ডেবিট'),
-                        icon: Icon(Icons.remove),
-                      ),
-                    ],
-                    selected: {selectedType.value},
-                    onSelectionChanged: (Set<EntryType> newSelection) {
-                      selectedType.value = newSelection.first;
-                    },
-                  )),
+              Obx(
+                () => SegmentedButton<EntryType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: EntryType.credit,
+                      label: Text('ক্রেডিট'),
+                      icon: Icon(Icons.add),
+                    ),
+                    ButtonSegment(
+                      value: EntryType.debit,
+                      label: Text('ডেবিট'),
+                      icon: Icon(Icons.remove),
+                    ),
+                  ],
+                  selected: {selectedType.value},
+                  onSelectionChanged: (Set<EntryType> newSelection) {
+                    selectedType.value = newSelection.first;
+                  },
+                ),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: amountController,
@@ -254,8 +268,9 @@ class EntryListPage extends StatelessWidget {
                   hintText: 'টাকার পরিমাণ লিখুন',
                   prefixText: '৳ ',
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -275,31 +290,31 @@ class EntryListPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Obx(() => ListTile(
-                    title: const Text('তারিখ'),
-                    subtitle: Text(
-                        DateFormat('MMM dd, yyyy').format(selectedDate.value)),
-                    trailing: const Icon(Icons.calendar_today),
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate.value,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (date != null) {
-                        selectedDate.value = date;
-                      }
-                    },
-                  )),
+              Obx(
+                () => ListTile(
+                  title: const Text('তারিখ'),
+                  subtitle: Text(
+                    DateFormat('MMM dd, yyyy').format(selectedDate.value),
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate.value,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (date != null) {
+                      selectedDate.value = date;
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               if (amountController.text.isNotEmpty &&
@@ -315,9 +330,9 @@ class EntryListPage extends StatelessWidget {
                   tags: tagsController.text.isEmpty
                       ? []
                       : tagsController.text
-                          .split(',')
-                          .map((e) => e.trim())
-                          .toList(),
+                            .split(',')
+                            .map((e) => e.trim())
+                            .toList(),
                 );
                 controller.createEntry(entry);
               }
@@ -361,13 +376,13 @@ class EntryListPage extends StatelessWidget {
                     children: [
                       Text(
                         '৳${entry.amount.toStringAsFixed(2)}',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: entry.type == EntryType.credit
-                                      ? AppTheme.creditColor
-                                      : AppTheme.debitColor,
-                                ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: entry.type == EntryType.credit
+                                  ? AppTheme.creditColor
+                                  : AppTheme.debitColor,
+                            ),
                       ),
                       Text(
                         entry.type == EntryType.credit ? 'ক্রেডিট' : 'ডেবিট',
@@ -400,11 +415,13 @@ class EntryListPage extends StatelessWidget {
                 subtitle: Wrap(
                   spacing: 4,
                   children: entry.tags
-                      .map((tag) => Chip(
-                            label: Text(tag),
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ))
+                      .map(
+                        (tag) => Chip(
+                          label: Text(tag),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
                       .toList(),
                 ),
                 contentPadding: EdgeInsets.zero,
@@ -427,17 +444,18 @@ class EntryListPage extends StatelessWidget {
   }
 
   void _confirmDelete(
-      BuildContext context, EntryController controller, Entry entry) {
+    BuildContext context,
+    EntryController controller,
+    Entry entry,
+  ) {
     Get.dialog(
       AlertDialog(
         title: const Text('এন্ট্রি মুছে ফেলুন'),
         content: Text(
-            '৳${entry.amount.toStringAsFixed(2)} পরিমাণের এই এন্ট্রি কি মুছে ফেলতে চান?'),
+          '৳${entry.amount.toStringAsFixed(2)} পরিমাণের এই এন্ট্রি কি মুছে ফেলতে চান?',
+        ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               Get.back();

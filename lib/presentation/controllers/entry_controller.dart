@@ -27,7 +27,7 @@ class EntryController extends GetxController {
       } else {
         entries.value = await _repository.getAllEntries();
       }
-      filteredEntries.value = entries;
+      filteredEntries.assignAll(entries);
     } finally {
       isLoading.value = false;
     }
@@ -77,7 +77,7 @@ class EntryController extends GetxController {
   void searchEntries(String query) {
     searchQuery.value = query;
     if (query.isEmpty) {
-      filteredEntries.value = entries;
+      filteredEntries.assignAll(entries);
     } else {
       filteredEntries.value = entries
           .where((entry) =>
@@ -86,6 +86,13 @@ class EntryController extends GetxController {
                   entry.tags.any(
                       (tag) => tag.toLowerCase().contains(query.toLowerCase())))
           .toList();
+    }
+  }
+
+  Future<void> clearCustomerFilter() async {
+    if (selectedCustomerId.value != null) {
+      selectedCustomerId.value = null;
+      await loadEntries();
     }
   }
 }

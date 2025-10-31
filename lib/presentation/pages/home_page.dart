@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controllers/customer_controller.dart';
+import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
+
 import '../controllers/entry_controller.dart';
 import '../widgets/dashboard_card.dart';
 
@@ -10,8 +11,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final customerController = Get.put(CustomerController());
-    final entryController = Get.put(EntryController());
+    final customerController = Get.find<CustomerController>();
+    final entryController = Get.find<EntryController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -40,53 +41,55 @@ class HomePage extends StatelessWidget {
               Text(
                 'ড্যাশবোর্ড',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
-              Obx(() => GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    children: [
-                      DashboardCard(
-                        title: 'কাস্টমার',
-                        count: customerController.customers.length.toString(),
-                        icon: Icons.people,
-                        color: Colors.blue,
-                        onTap: () => Get.toNamed('/customers'),
-                      ),
-                      DashboardCard(
-                        title: 'এন্ট্রি',
-                        count: entryController.entries.length.toString(),
-                        icon: Icons.receipt_long,
-                        color: Colors.green,
-                        onTap: () => Get.toNamed('/entries'),
-                      ),
-                      DashboardCard(
-                        title: 'ক্রেডিট',
-                        count: _getCreditsCount(entryController.entries),
-                        icon: Icons.add_circle,
-                        color: Colors.teal,
-                        onTap: () => Get.toNamed('/entries'),
-                      ),
-                      DashboardCard(
-                        title: 'ডেবিট',
-                        count: _getDebitsCount(entryController.entries),
-                        icon: Icons.remove_circle,
-                        color: Colors.orange,
-                        onTap: () => Get.toNamed('/entries'),
-                      ),
-                    ],
-                  )),
+              Obx(
+                () => GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  children: [
+                    DashboardCard(
+                      title: 'কাস্টমার',
+                      count: customerController.customers.length.toString(),
+                      icon: Icons.people,
+                      color: Colors.blue,
+                      onTap: () => Get.toNamed('/customers'),
+                    ),
+                    DashboardCard(
+                      title: 'এন্ট্রি',
+                      count: entryController.entries.length.toString(),
+                      icon: Icons.receipt_long,
+                      color: Colors.green,
+                      onTap: () => Get.toNamed('/entries'),
+                    ),
+                    DashboardCard(
+                      title: 'ক্রেডিট',
+                      count: _getCreditsCount(entryController.entries),
+                      icon: Icons.add_circle,
+                      color: Colors.teal,
+                      onTap: () => Get.toNamed('/entries'),
+                    ),
+                    DashboardCard(
+                      title: 'ডেবিট',
+                      count: _getDebitsCount(entryController.entries),
+                      icon: Icons.remove_circle,
+                      color: Colors.orange,
+                      onTap: () => Get.toNamed('/entries'),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               Text(
                 'দ্রুত অ্যাকশন',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _buildQuickActions(context),

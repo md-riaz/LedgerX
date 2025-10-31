@@ -20,7 +20,7 @@ class CustomerController extends GetxController {
     try {
       isLoading.value = true;
       customers.value = await _repository.getAllCustomers();
-      filteredCustomers.value = customers;
+      filteredCustomers.assignAll(customers);
     } finally {
       isLoading.value = false;
     }
@@ -61,13 +61,19 @@ class CustomerController extends GetxController {
   void searchCustomers(String query) {
     searchQuery.value = query;
     if (query.isEmpty) {
-      filteredCustomers.value = customers;
+      filteredCustomers.assignAll(customers);
     } else {
-      filteredCustomers.value = customers
-          .where((customer) =>
-              customer.name.toLowerCase().contains(query.toLowerCase()) ||
-              (customer.phone?.contains(query) ?? false))
-          .toList();
+      final lowerQuery = query.toLowerCase();
+      filteredCustomers.value = customers.where((customer) {
+        final nameMatch = customer.name.toLowerCase().contains(lowerQuery);
+        final phoneMatch =
+            customer.phone?.toLowerCase().contains(lowerQuery) ?? false;
+        final addressMatch =
+            customer.address?.toLowerCase().contains(lowerQuery) ?? false;
+        final notesMatch =
+            customer.notes?.toLowerCase().contains(lowerQuery) ?? false;
+        return nameMatch || phoneMatch || addressMatch || notesMatch;
+      }).toList();
     }
   }
 }
