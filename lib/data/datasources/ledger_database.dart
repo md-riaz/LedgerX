@@ -3,8 +3,6 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:drift/web.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ledgerx/utils/io_stub.dart' if (dart.library.io) 'dart:io'
     as io;
@@ -12,33 +10,11 @@ import 'package:ledgerx/utils/platform_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'connection/connection.dart';
+
 part 'ledger_database.g.dart';
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    if (kIsWeb) {
-      final storage = DriftWebStorage.indexedDb('ledgerx_db');
-      return WebDatabase.withStorage(storage);
-    }
-
-    final docDir = await getApplicationDocumentsDirectory();
-    String dbPath;
-
-    if (PlatformUtils.isDesktop) {
-      final dataDir = io.Directory(p.join(docDir.path, 'LedgerX', 'data'));
-      if (!await dataDir.exists()) {
-        await dataDir.create(recursive: true);
-      }
-      dbPath = p.join(dataDir.path, 'ledgerx.db');
-    } else {
-      dbPath = p.join(docDir.path, 'ledgerx.db');
-    }
-
-    final file = io.File(dbPath);
-    // Cast to dynamic so compilation succeeds when using the web stub implementation.
-    return NativeDatabase.createInBackground(file as dynamic);
-  });
-}
+QueryExecutor _openConnection() => openConnection();
 
 class DbUsers extends Table {
   IntColumn get id => integer().autoIncrement()();
