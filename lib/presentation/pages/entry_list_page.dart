@@ -19,7 +19,11 @@ class EntryListPage extends StatelessWidget {
     // Check if a customer ID was passed as argument
     final customerId = Get.arguments as int?;
     if (customerId != null) {
-      controller.loadEntriesByCustomer(customerId);
+      if (controller.selectedCustomerId.value != customerId) {
+        controller.loadEntriesByCustomer(customerId);
+      }
+    } else {
+      controller.clearCustomerFilter();
     }
 
     return Scaffold(

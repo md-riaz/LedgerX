@@ -20,7 +20,7 @@ class CustomerController extends GetxController {
     try {
       isLoading.value = true;
       customers.value = await _repository.getAllCustomers();
-      filteredCustomers.value = customers;
+      filteredCustomers.assignAll(customers);
     } finally {
       isLoading.value = false;
     }
@@ -61,7 +61,7 @@ class CustomerController extends GetxController {
   void searchCustomers(String query) {
     searchQuery.value = query;
     if (query.isEmpty) {
-      filteredCustomers.value = customers;
+      filteredCustomers.assignAll(customers);
     } else {
       final lowerQuery = query.toLowerCase();
       filteredCustomers.value = customers.where((customer) {
