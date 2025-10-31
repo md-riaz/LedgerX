@@ -38,10 +38,12 @@ class EntryController extends GetxController {
     await loadEntries();
   }
 
-  Future<void> createEntry(Entry entry) async {
+  Future<void> createEntry(Entry entry, {bool closeAfterCreate = true}) async {
     await _repository.createEntry(entry);
     await loadEntries();
-    Get.back();
+    if (closeAfterCreate && Get.isDialogOpen == true) {
+      Get.back();
+    }
     Get.snackbar(
       'সফল',
       'এন্ট্রি সফলভাবে যোগ হয়েছে',

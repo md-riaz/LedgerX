@@ -14,7 +14,14 @@ class CustomerListPage extends GetView<CustomerController> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: _QuickAddCustomerCard(
+              controller: controller,
+              onOpenFullForm: _showAddCustomerDialog,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               decoration: const InputDecoration(
                 hintText: 'নাম বা ফোন দিয়ে সার্চ করুন...',
@@ -114,13 +121,17 @@ class CustomerListPage extends GetView<CustomerController> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddCustomerDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('কাস্টমার যোগ করুন'),
+        icon: const Icon(Icons.settings),
+        label: const Text('বিস্তারিত ফর্ম'),
       ),
     );
   }
 
   void _showAddCustomerDialog() {
+    _showAdvancedCustomerDialog();
+  }
+
+  void _showAdvancedCustomerDialog() {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final addressController = TextEditingController();
@@ -205,7 +216,7 @@ class CustomerListPage extends GetView<CustomerController> {
               );
               controller.createCustomer(customer);
             },
-            child: const Text('যোগ করুন'),
+            child: const Text('কাস্টমার সংরক্ষণ করুন'),
           ),
         ],
       ),
@@ -417,6 +428,128 @@ class CustomerListPage extends GetView<CustomerController> {
             child: const Text('মুছে ফেলুন'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickAddCustomerCard extends StatefulWidget {
+  const _QuickAddCustomerCard({
+    required this.controller,
+    required this.onOpenFullForm,
+  });
+
+  final CustomerController controller;
+  final VoidCallback onOpenFullForm;
+
+  @override
+  State<_QuickAddCustomerCard> createState() => _QuickAddCustomerCardState();
+}
+
+class _QuickAddCustomerCardState extends State<_QuickAddCustomerCard> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSaving) return;
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    if (name.isEmpty) {
+      Get.snackbar(
+        'তথ্য অসম্পূর্ণ',
+        'কাস্টমারের নাম লিখুন',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade400,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final customer = Customer(
+      name: name,
+      phone: phone.isEmpty ? null : phone,
+    );
+
+    await widget.controller
+        .createCustomer(customer, closeAfterCreate: false);
+
+    setState(() {
+      _isSaving = false;
+      _nameController.clear();
+      _phoneController.clear();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'দ্রুত কাস্টমার যোগ করুন',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'কাস্টমারের নাম *',
+                prefixIcon: Icon(Icons.person),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _phoneController,
+              decoration: const InputDecoration(
+                labelText: 'ফোন (ঐচ্ছিক)',
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _submit,
+                    icon: _isSaving
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(_isSaving ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: widget.onOpenFullForm,
+                  icon: const Icon(Icons.list_alt),
+                  label: const Text('বিস্তারিত ফর্ম'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

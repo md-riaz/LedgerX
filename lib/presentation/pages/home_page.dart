@@ -68,14 +68,14 @@ class HomePage extends StatelessWidget {
                       onTap: () => Get.toNamed('/entries'),
                     ),
                     DashboardCard(
-                      title: 'ক্রেডিট',
+                      title: 'টাকা পাবো',
                       count: _getCreditsCount(entryController.entries),
                       icon: Icons.add_circle,
                       color: Colors.teal,
                       onTap: () => Get.toNamed('/entries'),
                     ),
                     DashboardCard(
-                      title: 'ডেবিট',
+                      title: 'টাকা দেবো',
                       count: _getDebitsCount(entryController.entries),
                       icon: Icons.remove_circle,
                       color: Colors.orange,

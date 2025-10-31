@@ -40,7 +40,16 @@ class EntryListPage extends StatelessWidget {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: _QuickEntryForm(
+              entryController: controller,
+              customerController: customerController,
+              onOpenFullForm: () =>
+                  _showAddEntryDialog(context, controller, customerController),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Column(
               children: [
                 TextField(
@@ -196,13 +205,215 @@ class EntryListPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
             _showAddEntryDialog(context, controller, customerController),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.settings),
+        label: const Text('বিস্তারিত এন্ট্রি ফর্ম'),
       ),
     );
   }
+
+class _QuickEntryForm extends StatefulWidget {
+  const _QuickEntryForm({
+    required this.entryController,
+    required this.customerController,
+    required this.onOpenFullForm,
+  });
+
+  final EntryController entryController;
+  final CustomerController customerController;
+  final VoidCallback onOpenFullForm;
+
+  @override
+  State<_QuickEntryForm> createState() => _QuickEntryFormState();
+}
+
+class _QuickEntryFormState extends State<_QuickEntryForm> {
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  EntryType _selectedType = EntryType.credit;
+  bool _isSaving = false;
+  int? _selectedCustomerId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCustomerId = widget.entryController.selectedCustomerId.value;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSaving) return;
+
+    final amountText = _amountController.text.trim();
+    final amount = double.tryParse(amountText);
+
+    if (_selectedCustomerId == null) {
+      Get.snackbar(
+        'কাস্টমার নেই',
+        'প্রথমে কাস্টমার নির্বাচন করুন',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade400,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (amount == null || amount <= 0) {
+      Get.snackbar(
+        'ভুল পরিমাণ',
+        'সঠিক টাকার পরিমাণ লিখুন',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade400,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final entry = Entry(
+      customerId: _selectedCustomerId!,
+      type: _selectedType,
+      amount: amount,
+      description:
+          _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      date: DateTime.now(),
+      tags: const [],
+    );
+
+    await widget.entryController
+        .createEntry(entry, closeAfterCreate: false);
+
+    setState(() {
+      _isSaving = false;
+      _amountController.clear();
+      _noteController.clear();
+      _selectedType = EntryType.credit;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'দ্রুত এন্ট্রি যোগ করুন',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Obx(() {
+              final customers = widget.customerController.customers
+                  .where((customer) => customer.id != null)
+                  .toList();
+              return DropdownButtonFormField<int>(
+                value: _selectedCustomerId,
+                decoration: const InputDecoration(
+                  labelText: 'কাস্টমার নির্বাচন করুন *',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                items: customers
+                    .map(
+                      (customer) => DropdownMenuItem<int>(
+                        value: customer.id!,
+                        child: Text(customer.name),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCustomerId = value;
+                  });
+                  widget.entryController.selectedCustomerId.value = value;
+                },
+              );
+            }),
+            const SizedBox(height: 12),
+            ToggleButtons(
+              borderRadius: BorderRadius.circular(8),
+              isSelected: [
+                _selectedType == EntryType.credit,
+                _selectedType == EntryType.debit,
+              ],
+              onPressed: (index) {
+                setState(() {
+                  _selectedType =
+                      index == 0 ? EntryType.credit : EntryType.debit;
+                });
+              },
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('টাকা পাবো'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('টাকা দেবো'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amountController,
+              decoration: const InputDecoration(
+                labelText: 'টাকার পরিমাণ *',
+                prefixText: '৳ ',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _noteController,
+              decoration: const InputDecoration(
+                labelText: 'ছোট নোট (ঐচ্ছিক)',
+                prefixIcon: Icon(Icons.note_alt_outlined),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _submit,
+                    icon: _isSaving
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(_isSaving ? 'সংরক্ষণ হচ্ছে...' : 'এন্ট্রি সংরক্ষণ করুন'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: widget.onOpenFullForm,
+                  icon: const Icon(Icons.list_alt),
+                  label: const Text('বিস্তারিত ফর্ম'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
   void _showAddEntryDialog(
     BuildContext context,
@@ -245,12 +456,12 @@ class EntryListPage extends StatelessWidget {
                   segments: const [
                     ButtonSegment(
                       value: EntryType.credit,
-                      label: Text('ক্রেডিট'),
+                      label: Text('টাকা পাবো'),
                       icon: Icon(Icons.add),
                     ),
                     ButtonSegment(
                       value: EntryType.debit,
-                      label: Text('ডেবিট'),
+                      label: Text('টাকা দেবো'),
                       icon: Icon(Icons.remove),
                     ),
                   ],
@@ -337,7 +548,7 @@ class EntryListPage extends StatelessWidget {
                 controller.createEntry(entry);
               }
             },
-            child: const Text('যোগ করুন'),
+            child: const Text('এন্ট্রি সংরক্ষণ করুন'),
           ),
         ],
       ),
@@ -385,7 +596,9 @@ class EntryListPage extends StatelessWidget {
                             ),
                       ),
                       Text(
-                        entry.type == EntryType.credit ? 'ক্রেডিট' : 'ডেবিট',
+                        entry.type == EntryType.credit
+                            ? 'টাকা পাবো'
+                            : 'টাকা দেবো',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
