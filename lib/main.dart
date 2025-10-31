@@ -38,6 +38,7 @@ void main() async {
   final database = LedgerDatabase();
   await database.warmUp();
   Get.put<LedgerDatabase>(database, permanent: true);
+  Get.put<ThemeController>(ThemeController(), permanent: true);
 
   final authController =
       Get.put(AuthController(database: database), permanent: true);
@@ -81,55 +82,59 @@ class LedgerXApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'LedgerX',
-      locale: const Locale('bn', 'BD'),
-      fallbackLocale: const Locale('bn', 'BD'),
-      supportedLocales: const [Locale('bn', 'BD')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      initialRoute: initialRoute,
-      initialBinding: BindingsBuilder(() {
-        Get.put(ThemeController());
-        if (!Get.isRegistered<AuthController>()) {
+    final themeController = Get.find<ThemeController>();
+
+    return Obx(
+      () => GetMaterialApp(
+        title: 'LedgerX',
+        locale: const Locale('bn', 'BD'),
+        fallbackLocale: const Locale('bn', 'BD'),
+        supportedLocales: const [Locale('bn', 'BD')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeController.themeMode.value,
+        initialRoute: '/login',
+        initialBinding: BindingsBuilder(() {
           Get.put(AuthController());
-        }
-        Get.put(CustomerController());
-        Get.put(EntryController());
-      }),
-      getPages: [
-        GetPage(
-          name: '/login',
-          page: () => const LoginPage(),
-        ),
-        GetPage(
-          name: '/',
-          page: () => const HomePage(),
-          middlewares: [AuthMiddleware()],
-        ),
-        GetPage(
-          name: '/customers',
-          page: () => const CustomerListPage(),
-          middlewares: [AuthMiddleware()],
-        ),
-        GetPage(
-          name: '/entries',
-          page: () => const EntryListPage(),
-          middlewares: [AuthMiddleware()],
-        ),
-        GetPage(
-          name: '/settings',
-          page: () => const SettingsPage(),
-          middlewares: [AuthMiddleware()],
-        ),
-      ],
-      debugShowCheckedModeBanner: false,
+          Get.put(CustomerController());
+          Get.put(EntryController());
+        }),
+        getPages: [
+          GetPage(
+            name: '/login',
+            page: () => const LoginPage(),
+            binding: BindingsBuilder(() {
+              Get.lazyPut(() => AuthController());
+            }),
+          ),
+          GetPage(
+            name: '/',
+            page: () => const HomePage(),
+            middlewares: [AuthMiddleware()],
+          ),
+          GetPage(
+            name: '/customers',
+            page: () => const CustomerListPage(),
+            middlewares: [AuthMiddleware()],
+          ),
+          GetPage(
+            name: '/entries',
+            page: () => const EntryListPage(),
+            middlewares: [AuthMiddleware()],
+          ),
+          GetPage(
+            name: '/settings',
+            page: () => const SettingsPage(),
+            middlewares: [AuthMiddleware()],
+          ),
+        ],
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
