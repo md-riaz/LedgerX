@@ -208,7 +208,7 @@ class EntryListPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
             _showAddEntryDialog(context, controller, customerController),
-        icon: const Icon(Icons.settings),
+        icon: const Icon(Icons.article_outlined),
         label: const Text('বিস্তারিত এন্ট্রি ফর্ম'),
       ),
     );
@@ -234,13 +234,6 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
   final TextEditingController _noteController = TextEditingController();
   EntryType _selectedType = EntryType.credit;
   bool _isSaving = false;
-  int? _selectedCustomerId;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCustomerId = widget.entryController.selectedCustomerId.value;
-  }
 
   @override
   void dispose() {
@@ -252,16 +245,18 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
   Future<void> _submit() async {
     if (_isSaving) return;
 
+    final selectedCustomerId = widget.entryController.selectedCustomerId.value;
     final amountText = _amountController.text.trim();
     final amount = double.tryParse(amountText);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    if (_selectedCustomerId == null) {
+    if (selectedCustomerId == null) {
       Get.snackbar(
         'কাস্টমার নেই',
         'প্রথমে কাস্টমার নির্বাচন করুন',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
+        backgroundColor: colorScheme.error,
+        colorText: colorScheme.onError,
       );
       return;
     }
@@ -271,8 +266,8 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
         'ভুল পরিমাণ',
         'সঠিক টাকার পরিমাণ লিখুন',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
+        backgroundColor: colorScheme.error,
+        colorText: colorScheme.onError,
       );
       return;
     }
@@ -280,7 +275,7 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
     setState(() => _isSaving = true);
 
     final entry = Entry(
-      customerId: _selectedCustomerId!,
+      customerId: selectedCustomerId,
       type: _selectedType,
       amount: amount,
       description:
@@ -291,6 +286,8 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
 
     await widget.entryController
         .createEntry(entry, closeAfterCreate: false);
+
+    if (!mounted) return;
 
     setState(() {
       _isSaving = false;
@@ -320,8 +317,9 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
               final customers = widget.customerController.customers
                   .where((customer) => customer.id != null)
                   .toList();
+              final selectedId = widget.entryController.selectedCustomerId.value;
               return DropdownButtonFormField<int>(
-                value: _selectedCustomerId,
+                value: selectedId,
                 decoration: const InputDecoration(
                   labelText: 'কাস্টমার নির্বাচন করুন *',
                   prefixIcon: Icon(Icons.person),
@@ -335,9 +333,6 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
                     )
                     .toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCustomerId = value;
-                  });
                   widget.entryController.selectedCustomerId.value = value;
                 },
               );

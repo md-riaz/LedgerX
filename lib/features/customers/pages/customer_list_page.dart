@@ -17,7 +17,7 @@ class CustomerListPage extends GetView<CustomerController> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: _QuickAddCustomerCard(
               controller: controller,
-              onOpenFullForm: _showAddCustomerDialog,
+              onOpenFullForm: _showAdvancedCustomerDialog,
             ),
           ),
           Padding(
@@ -120,15 +120,11 @@ class CustomerListPage extends GetView<CustomerController> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddCustomerDialog,
-        icon: const Icon(Icons.settings),
+        onPressed: _showAdvancedCustomerDialog,
+        icon: const Icon(Icons.article_outlined),
         label: const Text('বিস্তারিত ফর্ম'),
       ),
     );
-  }
-
-  void _showAddCustomerDialog() {
-    _showAdvancedCustomerDialog();
   }
 
   void _showAdvancedCustomerDialog() {
@@ -468,8 +464,8 @@ class _QuickAddCustomerCardState extends State<_QuickAddCustomerCard> {
         'তথ্য অসম্পূর্ণ',
         'কাস্টমারের নাম লিখুন',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.error,
+        colorText: Theme.of(context).colorScheme.onError,
       );
       return;
     }
@@ -483,6 +479,8 @@ class _QuickAddCustomerCardState extends State<_QuickAddCustomerCard> {
 
     await widget.controller
         .createCustomer(customer, closeAfterCreate: false);
+
+    if (!mounted) return;
 
     setState(() {
       _isSaving = false;
