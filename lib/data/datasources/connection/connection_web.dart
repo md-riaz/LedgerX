@@ -5,5 +5,5 @@ import 'package:drift/web.dart';
 
 QueryExecutor createConnection() {
   final storage = DriftWebStorage.indexedDb('ledgerx_db');
-  return WebDatabase.withStorage(storage);
+  return WebDatabase.driver(storage: storage);
 }
