@@ -127,8 +127,8 @@ class EntryListPage extends StatelessWidget {
                       Text(
                         'কোনো এন্ট্রি পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -213,6 +213,7 @@ class EntryListPage extends StatelessWidget {
       ),
     );
   }
+}
 
 class _QuickEntryForm extends StatefulWidget {
   const _QuickEntryForm({
@@ -278,14 +279,14 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
       customerId: selectedCustomerId,
       type: _selectedType,
       amount: amount,
-      description:
-          _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      description: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
       date: DateTime.now(),
       tags: const [],
     );
 
-    await widget.entryController
-        .createEntry(entry, closeAfterCreate: false);
+    await widget.entryController.createEntry(entry, closeAfterCreate: false);
 
     if (!mounted) return;
 
@@ -317,9 +318,11 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
               final customers = widget.customerController.customers
                   .where((customer) => customer.id != null)
                   .toList();
-              final selectedId = widget.entryController.selectedCustomerId.value;
+              final selectedId =
+                  widget.entryController.selectedCustomerId.value;
               return DropdownButtonFormField<int>(
-                value: selectedId,
+                key: ValueKey<int?>(selectedId),
+                initialValue: selectedId,
                 decoration: const InputDecoration(
                   labelText: 'কাস্টমার নির্বাচন করুন *',
                   prefixIcon: Icon(Icons.person),
@@ -368,7 +371,8 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
                 labelText: 'টাকার পরিমাণ *',
                 prefixText: '৳ ',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -392,7 +396,9 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: Text(_isSaving ? 'সংরক্ষণ হচ্ছে...' : 'এন্ট্রি সংরক্ষণ করুন'),
+                    label: Text(_isSaving
+                        ? 'সংরক্ষণ হচ্ছে...'
+                        : 'এন্ট্রি সংরক্ষণ করুন'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -410,278 +416,276 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
   }
 }
 
-  void _showAddEntryDialog(
-    BuildContext context,
-    EntryController controller,
-    CustomerController customerController,
-  ) {
-    final amountController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final tagsController = TextEditingController();
-    final selectedType = Rx<EntryType>(EntryType.credit);
-    final selectedDate = Rx<DateTime>(DateTime.now());
-    final selectedCustomerId = Rx<int?>(controller.selectedCustomerId.value);
+void _showAddEntryDialog(
+  BuildContext context,
+  EntryController controller,
+  CustomerController customerController,
+) {
+  final amountController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final tagsController = TextEditingController();
+  final selectedType = Rx<EntryType>(EntryType.credit);
+  final selectedDate = Rx<DateTime>(DateTime.now());
+  final selectedCustomerId = Rx<int?>(controller.selectedCustomerId.value);
 
-    Get.dialog(
-      AlertDialog(
-        title: const Text('এন্ট্রি যোগ করুন'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Obx(
-                () => DropdownMenu<int>(
-                  label: const Text('কাস্টমার *'),
-                  initialSelection: selectedCustomerId.value,
-                  dropdownMenuEntries: customerController.customers
-                      .where((customer) => customer.id != null)
-                      .map(
-                        (customer) => DropdownMenuEntry<int>(
-                          value: customer.id!,
-                          label: customer.name,
-                        ),
-                      )
-                      .toList(),
-                  onSelected: (value) => selectedCustomerId.value = value,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Obx(
-                () => SegmentedButton<EntryType>(
-                  segments: const [
-                    ButtonSegment(
-                      value: EntryType.credit,
-                      label: Text('টাকা পাবো'),
-                      icon: Icon(Icons.add),
-                    ),
-                    ButtonSegment(
-                      value: EntryType.debit,
-                      label: Text('টাকা দেবো'),
-                      icon: Icon(Icons.remove),
-                    ),
-                  ],
-                  selected: {selectedType.value},
-                  onSelectionChanged: (Set<EntryType> newSelection) {
-                    selectedType.value = newSelection.first;
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: amountController,
-                decoration: const InputDecoration(
-                  labelText: 'পরিমাণ *',
-                  hintText: 'টাকার পরিমাণ লিখুন',
-                  prefixText: '৳ ',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'বিবরণ',
-                  hintText: 'বিবরণ লিখুন',
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: tagsController,
-                decoration: const InputDecoration(
-                  labelText: 'ট্যাগ',
-                  hintText: 'কমা দিয়ে ট্যাগ লিখুন',
-                ),
-              ),
-              const SizedBox(height: 16),
-              Obx(
-                () => ListTile(
-                  title: const Text('তারিখ'),
-                  subtitle: Text(
-                    DateFormat('MMM dd, yyyy').format(selectedDate.value),
-                  ),
-                  trailing: const Icon(Icons.calendar_today),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate.value,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (date != null) {
-                      selectedDate.value = date;
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
-          ElevatedButton(
-            onPressed: () {
-              if (amountController.text.isNotEmpty &&
-                  selectedCustomerId.value != null) {
-                final entry = Entry(
-                  customerId: selectedCustomerId.value!,
-                  type: selectedType.value,
-                  amount: double.tryParse(amountController.text) ?? 0.0,
-                  description: descriptionController.text.isEmpty
-                      ? null
-                      : descriptionController.text,
-                  date: selectedDate.value,
-                  tags: tagsController.text.isEmpty
-                      ? []
-                      : tagsController.text
-                            .split(',')
-                            .map((e) => e.trim())
-                            .toList(),
-                );
-                controller.createEntry(entry);
-              }
-            },
-            child: const Text('এন্ট্রি সংরক্ষণ করুন'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEntryDetails(BuildContext context, Entry entry) {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        ),
+  Get.dialog(
+    AlertDialog(
+      title: const Text('এন্ট্রি যোগ করুন'),
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: entry.type == EntryType.credit
-                      ? AppTheme.creditColor
-                      : AppTheme.debitColor,
-                  child: Icon(
-                    entry.type == EntryType.credit ? Icons.add : Icons.remove,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '৳${entry.amount.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: entry.type == EntryType.credit
-                                  ? AppTheme.creditColor
-                                  : AppTheme.debitColor,
-                            ),
+            Obx(
+              () => DropdownMenu<int>(
+                label: const Text('কাস্টমার *'),
+                initialSelection: selectedCustomerId.value,
+                dropdownMenuEntries: customerController.customers
+                    .where((customer) => customer.id != null)
+                    .map(
+                      (customer) => DropdownMenuEntry<int>(
+                        value: customer.id!,
+                        label: customer.name,
                       ),
-                      Text(
-                        entry.type == EntryType.credit
-                            ? 'টাকা পাবো'
-                            : 'টাকা দেবো',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 32),
-            if (entry.description != null) ...[
-              ListTile(
-                leading: const Icon(Icons.description),
-                title: const Text('বিবরণ'),
-                subtitle: Text(entry.description!),
-                contentPadding: EdgeInsets.zero,
+                    )
+                    .toList(),
+                onSelected: (value) => selectedCustomerId.value = value,
               ),
-            ],
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('তারিখ'),
-              subtitle: Text(DateFormat('MMM dd, yyyy').format(entry.date)),
-              contentPadding: EdgeInsets.zero,
             ),
-            if (entry.tags.isNotEmpty) ...[
-              ListTile(
-                leading: const Icon(Icons.label),
-                title: const Text('ট্যাগ'),
-                subtitle: Wrap(
-                  spacing: 4,
-                  children: entry.tags
-                      .map(
-                        (tag) => Chip(
-                          label: Text(tag),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      )
-                      .toList(),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text('বন্ধ করুন'),
+            Obx(
+              () => SegmentedButton<EntryType>(
+                segments: const [
+                  ButtonSegment(
+                    value: EntryType.credit,
+                    label: Text('টাকা পাবো'),
+                    icon: Icon(Icons.add),
+                  ),
+                  ButtonSegment(
+                    value: EntryType.debit,
+                    label: Text('টাকা দেবো'),
+                    icon: Icon(Icons.remove),
+                  ),
+                ],
+                selected: {selectedType.value},
+                onSelectionChanged: (Set<EntryType> newSelection) {
+                  selectedType.value = newSelection.first;
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              decoration: const InputDecoration(
+                labelText: 'পরিমাণ *',
+                hintText: 'টাকার পরিমাণ লিখুন',
+                prefixText: '৳ ',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'বিবরণ',
+                hintText: 'বিবরণ লিখুন',
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: tagsController,
+              decoration: const InputDecoration(
+                labelText: 'ট্যাগ',
+                hintText: 'কমা দিয়ে ট্যাগ লিখুন',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Obx(
+              () => ListTile(
+                title: const Text('তারিখ'),
+                subtitle: Text(
+                  DateFormat('MMM dd, yyyy').format(selectedDate.value),
                 ),
-              ],
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate.value,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (date != null) {
+                    selectedDate.value = date;
+                  }
+                },
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _confirmDelete(
-    BuildContext context,
-    EntryController controller,
-    Entry entry,
-  ) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('এন্ট্রি মুছে ফেলুন'),
-        content: Text(
-          '৳${entry.amount.toStringAsFixed(2)} পরিমাণের এই এন্ট্রি কি মুছে ফেলতে চান?',
+      actions: [
+        TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
+        ElevatedButton(
+          onPressed: () {
+            if (amountController.text.isNotEmpty &&
+                selectedCustomerId.value != null) {
+              final entry = Entry(
+                customerId: selectedCustomerId.value!,
+                type: selectedType.value,
+                amount: double.tryParse(amountController.text) ?? 0.0,
+                description: descriptionController.text.isEmpty
+                    ? null
+                    : descriptionController.text,
+                date: selectedDate.value,
+                tags: tagsController.text.isEmpty
+                    ? []
+                    : tagsController.text
+                        .split(',')
+                        .map((e) => e.trim())
+                        .toList(),
+              );
+              controller.createEntry(entry);
+            }
+          },
+          child: const Text('এন্ট্রি সংরক্ষণ করুন'),
         ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              controller.deleteEntry(entry.id!);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('মুছে ফেলুন'),
+      ],
+    ),
+  );
+}
+
+void _showEntryDetails(BuildContext context, Entry entry) {
+  Get.bottomSheet(
+    Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: entry.type == EntryType.credit
+                    ? AppTheme.creditColor
+                    : AppTheme.debitColor,
+                child: Icon(
+                  entry.type == EntryType.credit ? Icons.add : Icons.remove,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '৳${entry.amount.toStringAsFixed(2)}',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: entry.type == EntryType.credit
+                                    ? AppTheme.creditColor
+                                    : AppTheme.debitColor,
+                              ),
+                    ),
+                    Text(
+                      entry.type == EntryType.credit
+                          ? 'টাকা পাবো'
+                          : 'টাকা দেবো',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 32),
+          if (entry.description != null) ...[
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('বিবরণ'),
+              subtitle: Text(entry.description!),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+          ListTile(
+            leading: const Icon(Icons.calendar_today),
+            title: const Text('তারিখ'),
+            subtitle: Text(DateFormat('MMM dd, yyyy').format(entry.date)),
+            contentPadding: EdgeInsets.zero,
+          ),
+          if (entry.tags.isNotEmpty) ...[
+            ListTile(
+              leading: const Icon(Icons.label),
+              title: const Text('ট্যাগ'),
+              subtitle: Wrap(
+                spacing: 4,
+                children: entry.tags
+                    .map(
+                      (tag) => Chip(
+                        label: Text(tag),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    )
+                    .toList(),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('বন্ধ করুন'),
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  void _exportPDF(EntryController controller) {
-    Get.snackbar(
-      'PDF এক্সপোর্ট',
-      'PDF এক্সপোর্ট ফিচার শীঘ্রই আসছে',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
+void _confirmDelete(
+  BuildContext context,
+  EntryController controller,
+  Entry entry,
+) {
+  Get.dialog(
+    AlertDialog(
+      title: const Text('এন্ট্রি মুছে ফেলুন'),
+      content: Text(
+        '৳${entry.amount.toStringAsFixed(2)} পরিমাণের এই এন্ট্রি কি মুছে ফেলতে চান?',
+      ),
+      actions: [
+        TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+            controller.deleteEntry(entry.id!);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text('মুছে ফেলুন'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _exportPDF(EntryController controller) {
+  Get.snackbar(
+    'PDF এক্সপোর্ট',
+    'PDF এক্সপোর্ট ফিচার শীঘ্রই আসছে',
+    snackPosition: SnackPosition.BOTTOM,
+  );
 }

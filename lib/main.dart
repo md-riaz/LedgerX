@@ -39,6 +39,12 @@ void main() async {
   await database.warmUp();
   Get.put<LedgerDatabase>(database, permanent: true);
 
+  final authController =
+      Get.put(AuthController(database: database), permanent: true);
+  await authController.restoreSession();
+
+  final initialRoute = authController.isLoggedIn.value ? '/' : '/login';
+
   if (PlatformUtils.isWeb) {
     debugPrint('LedgerX: ওয়েবে লোকাল নোটিফিকেশন এখনো সমর্থিত নয়।');
   } else {
@@ -65,11 +71,13 @@ void main() async {
     );
   }
 
-  runApp(const LedgerXApp());
+  runApp(LedgerXApp(initialRoute: initialRoute));
 }
 
 class LedgerXApp extends StatelessWidget {
-  const LedgerXApp({super.key});
+  const LedgerXApp({super.key, required this.initialRoute});
+
+  final String initialRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -86,10 +94,12 @@ class LedgerXApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: '/login',
+      initialRoute: initialRoute,
       initialBinding: BindingsBuilder(() {
         Get.put(ThemeController());
-        Get.put(AuthController());
+        if (!Get.isRegistered<AuthController>()) {
+          Get.put(AuthController());
+        }
         Get.put(CustomerController());
         Get.put(EntryController());
       }),
@@ -97,9 +107,6 @@ class LedgerXApp extends StatelessWidget {
         GetPage(
           name: '/login',
           page: () => const LoginPage(),
-          binding: BindingsBuilder(() {
-            Get.lazyPut(() => AuthController());
-          }),
         ),
         GetPage(
           name: '/',

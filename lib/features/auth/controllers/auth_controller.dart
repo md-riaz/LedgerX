@@ -11,6 +11,7 @@ class AuthController extends GetxController {
   final RxBool isLoggedIn = false.obs;
   final Rx<User?> currentUser = Rx<User?>(null);
   final LedgerDatabase _db;
+  Future<void>? _restoreFuture;
 
   AuthController({LedgerDatabase? database})
       : _db = database ?? LedgerDatabase();
@@ -18,28 +19,41 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkLoginStatus();
+    restoreSession();
   }
 
-  Future<void> checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedInPref = prefs.getBool('is_logged_in') ?? false;
-    final userId = prefs.getInt('user_id');
+  Future<void> restoreSession({bool force = false}) {
+    if (force) {
+      _restoreFuture = null;
+    }
+    return _restoreFuture ??= _restoreSession();
+  }
 
-    if (isLoggedInPref && userId != null) {
-      await loadUser(userId);
-      isLoggedIn.value = true;
+  Future<void> _restoreSession() async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      final isLoggedInPref = prefs.getBool('is_logged_in') ?? false;
+      final userId = prefs.getInt('user_id');
+
+      if (isLoggedInPref && userId != null) {
+        final hasUser = await _loadUser(userId);
+        if (hasUser) {
+          isLoggedIn.value = true;
+          return;
+        }
+      }
+
+      await _clearPersistedSession(prefs);
+    } catch (_) {
+      await _clearPersistedSession(prefs);
+    } finally {
+      _restoreFuture = null;
     }
   }
 
   Future<void> loadUser(int userId) async {
-    final row = await (_db.select(_db.dbUsers)
-          ..where((tbl) => tbl.id.equals(userId)))
-        .getSingleOrNull();
-
-    if (row != null) {
-      currentUser.value = _mapUser(row);
-    }
+    await _loadUser(userId);
   }
 
   String _hashPassword(String password) {
@@ -150,14 +164,35 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    isLoggedIn.value = false;
-    currentUser.value = null;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', false);
-    await prefs.remove('user_id');
+    await _clearPersistedSession();
 
     Get.offAllNamed('/login');
+  }
+
+  Future<void> _clearPersistedSession([SharedPreferences? prefs]) async {
+    final effectivePrefs = prefs ?? await SharedPreferences.getInstance();
+    await effectivePrefs.setBool('is_logged_in', false);
+    await effectivePrefs.remove('user_id');
+    _clearInMemorySession();
+  }
+
+  Future<bool> _loadUser(int userId) async {
+    final row = await (_db.select(_db.dbUsers)
+          ..where((tbl) => tbl.id.equals(userId)))
+        .getSingleOrNull();
+
+    if (row != null) {
+      currentUser.value = _mapUser(row);
+      return true;
+    }
+
+    _clearInMemorySession();
+    return false;
+  }
+
+  void _clearInMemorySession() {
+    isLoggedIn.value = false;
+    currentUser.value = null;
   }
 
   Future<bool> hasAnyUser() async {
