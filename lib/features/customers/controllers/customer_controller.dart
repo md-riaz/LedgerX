@@ -26,10 +26,13 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> createCustomer(Customer customer) async {
+  Future<void> createCustomer(Customer customer,
+      {bool closeAfterCreate = true}) async {
     await _repository.createCustomer(customer);
     await loadCustomers();
-    Get.back();
+    if (closeAfterCreate && Get.isDialogOpen == true) {
+      Get.back();
+    }
     Get.snackbar(
       'সফল',
       'কাস্টমার সফলভাবে যোগ হয়েছে',
