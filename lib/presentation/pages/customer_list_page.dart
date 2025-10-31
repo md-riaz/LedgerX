@@ -7,8 +7,9 @@ import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
-import 'package:ledgerx/presentation/controllers/customer_controller.dart';
-import 'package:ledgerx/utils/io_stub.dart' if (dart.library.io) 'dart:io'
+import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
+import 'package:ledgerx/utils/io_stub.dart'
+    if (dart.library.io) 'dart:io'
     as io;
 
 class CustomerListPage extends StatelessWidget {
@@ -66,8 +67,8 @@ class CustomerListPage extends StatelessWidget {
                       Text(
                         'কোনো কাস্টমার পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -115,7 +116,9 @@ class CustomerListPage extends StatelessWidget {
   }
 
   void _showAddCustomerDialog(
-      BuildContext context, CustomerController controller) {
+    BuildContext context,
+    CustomerController controller,
+  ) {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final addressController = TextEditingController();
@@ -166,10 +169,7 @@ class CustomerListPage extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
@@ -196,7 +196,10 @@ class CustomerListPage extends StatelessWidget {
   }
 
   void _showCustomerDetails(
-      BuildContext context, CustomerController controller, Customer customer) {
+    BuildContext context,
+    CustomerController controller,
+    Customer customer,
+  ) {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(16),
@@ -286,16 +289,16 @@ class CustomerListPage extends StatelessWidget {
   }
 
   void _confirmDelete(
-      BuildContext context, CustomerController controller, Customer customer) {
+    BuildContext context,
+    CustomerController controller,
+    Customer customer,
+  ) {
     Get.dialog(
       AlertDialog(
         title: const Text('কাস্টমার মুছে ফেলুন'),
         content: Text('${customer.name} কাস্টমারকে কি মুছে ফেলতে চান?'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               Get.back();
@@ -352,12 +355,15 @@ class CustomerListPage extends StatelessWidget {
           if (hasHeader) {
             startIndex = 1;
             nameIndex = headerRow.indexWhere((value) => value.contains('name'));
-            phoneIndex =
-                headerRow.indexWhere((value) => value.contains('phone'));
-            addressIndex =
-                headerRow.indexWhere((value) => value.contains('address'));
-            notesIndex =
-                headerRow.indexWhere((value) => value.contains('note'));
+            phoneIndex = headerRow.indexWhere(
+              (value) => value.contains('phone'),
+            );
+            addressIndex = headerRow.indexWhere(
+              (value) => value.contains('address'),
+            );
+            notesIndex = headerRow.indexWhere(
+              (value) => value.contains('note'),
+            );
           } else {
             phoneIndex = fields[0].length > 1 ? 1 : -1;
             addressIndex = fields[0].length > 2 ? 2 : -1;

@@ -8,7 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'data/datasources/ledger_database.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/pages/login_page.dart';
-import 'presentation/controllers/customer_controller.dart';
+import 'features/customers/controllers/customer_controller.dart';
 import 'features/customers/pages/customer_list_page.dart';
 import 'features/settings/pages/settings_page.dart';
 import 'presentation/controllers/entry_controller.dart';
@@ -47,8 +47,9 @@ void main() async {
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
       macOS: DarwinInitializationSettings(),
-      linux:
-          LinuxInitializationSettings(defaultActionName: 'Open notification'),
+      linux: LinuxInitializationSettings(
+        defaultActionName: 'Open notification',
+      ),
       windows: WindowsInitializationSettings(
         appName: _windowsAppName,
         appUserModelId: _windowsAppUserModelId,

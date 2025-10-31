@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../domain/entities/customer.dart';
-import 'package:ledgerx/presentation/controllers/customer_controller.dart';
+import '../controllers/customer_controller.dart';
 
 class CustomerListPage extends GetView<CustomerController> {
   const CustomerListPage({super.key});
@@ -10,9 +10,7 @@ class CustomerListPage extends GetView<CustomerController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('কাস্টমার'),
-      ),
+      appBar: AppBar(title: const Text('কাস্টমার')),
       body: Column(
         children: [
           Padding(
@@ -46,15 +44,15 @@ class CustomerListPage extends GetView<CustomerController> {
                       Text(
                         'কোনো কাস্টমার পাওয়া যায়নি',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                          color: Colors.grey[600],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'শুরু করতে প্রথম কাস্টমার যোগ করুন',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[500],
-                            ),
+                          color: Colors.grey[500],
+                        ),
                       ),
                     ],
                   ),
@@ -96,8 +94,11 @@ class CustomerListPage extends GetView<CustomerController> {
                             onPressed: () => _showEditCustomerDialog(customer),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete,
-                                color: Colors.red, size: 20),
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                             onPressed: () => _confirmDelete(customer),
                           ),
                         ],
@@ -176,10 +177,7 @@ class CustomerListPage extends GetView<CustomerController> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
@@ -266,10 +264,7 @@ class CustomerListPage extends GetView<CustomerController> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) {
@@ -323,7 +318,9 @@ class CustomerListPage extends GetView<CustomerController> {
                   child: Text(
                     customer.name[0].toUpperCase(),
                     style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -410,10 +407,7 @@ class CustomerListPage extends GetView<CustomerController> {
         title: const Text('কাস্টমার মুছে ফেলুন'),
         content: Text('${customer.name} কাস্টমারকে কি মুছে ফেলতে চান?'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('বাতিল'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () {
               Get.back();

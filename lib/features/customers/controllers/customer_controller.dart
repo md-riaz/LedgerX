@@ -63,12 +63,16 @@ class CustomerController extends GetxController {
     if (query.isEmpty) {
       filteredCustomers.value = customers;
     } else {
+      final lowerQuery = query.toLowerCase();
       filteredCustomers.value = customers.where((customer) {
-        final lowerQuery = query.toLowerCase();
-        return customer.name.toLowerCase().contains(lowerQuery) ||
-            (customer.phone?.toLowerCase().contains(lowerQuery) ?? false) ||
-            (customer.address?.toLowerCase().contains(lowerQuery) ?? false) ||
-            (customer.notes?.toLowerCase().contains(lowerQuery) ?? false);
+        final nameMatch = customer.name.toLowerCase().contains(lowerQuery);
+        final phoneMatch =
+            customer.phone?.toLowerCase().contains(lowerQuery) ?? false;
+        final addressMatch =
+            customer.address?.toLowerCase().contains(lowerQuery) ?? false;
+        final notesMatch =
+            customer.notes?.toLowerCase().contains(lowerQuery) ?? false;
+        return nameMatch || phoneMatch || addressMatch || notesMatch;
       }).toList();
     }
   }
