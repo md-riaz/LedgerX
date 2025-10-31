@@ -8,7 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'data/datasources/ledger_database.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/pages/login_page.dart';
-import 'features/customers/controllers/customer_controller.dart';
+import 'presentation/controllers/customer_controller.dart';
 import 'features/customers/pages/customer_list_page.dart';
 import 'features/settings/pages/settings_page.dart';
 import 'presentation/controllers/entry_controller.dart';
@@ -108,18 +108,11 @@ class LedgerXApp extends StatelessWidget {
         GetPage(
           name: '/customers',
           page: () => const CustomerListPage(),
-          binding: BindingsBuilder(() {
-            Get.lazyPut(() => CustomerController());
-          }),
           middlewares: [AuthMiddleware()],
         ),
         GetPage(
           name: '/entries',
           page: () => const EntryListPage(),
-          binding: BindingsBuilder(() {
-            Get.lazyPut(() => EntryController());
-            Get.lazyPut(() => CustomerController());
-          }),
           middlewares: [AuthMiddleware()],
         ),
         GetPage(

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controllers/customer_controller.dart';
+import 'package:ledgerx/presentation/controllers/customer_controller.dart';
+
 import '../controllers/entry_controller.dart';
 import '../widgets/dashboard_card.dart';
 
@@ -10,8 +11,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final customerController = Get.put(CustomerController());
-    final entryController = Get.put(EntryController());
+    final customerController = Get.find<CustomerController>();
+    final entryController = Get.find<EntryController>();
 
     return Scaffold(
       appBar: AppBar(

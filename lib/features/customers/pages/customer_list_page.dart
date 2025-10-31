@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../domain/entities/customer.dart';
-import '../controllers/customer_controller.dart';
+import 'package:ledgerx/presentation/controllers/customer_controller.dart';
 
 class CustomerListPage extends GetView<CustomerController> {
   const CustomerListPage({super.key});

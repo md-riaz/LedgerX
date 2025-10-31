@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/entry.dart';
-import '../controllers/customer_controller.dart';
+import 'package:ledgerx/presentation/controllers/customer_controller.dart';
+
 import '../controllers/entry_controller.dart';
 import '../themes/app_theme.dart';
 
