@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/entry.dart';
+import 'package:ledgerx/domain/entities/customer.dart';
 import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
 
 import '../controllers/entry_controller.dart';
@@ -40,16 +41,7 @@ class EntryListPage extends StatelessWidget {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: _QuickEntryForm(
-              entryController: controller,
-              customerController: customerController,
-              onOpenFullForm: () =>
-                  _showAddEntryDialog(context, controller, customerController),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: Column(
               children: [
                 TextField(
@@ -209,208 +201,7 @@ class EntryListPage extends StatelessWidget {
         onPressed: () =>
             _showAddEntryDialog(context, controller, customerController),
         icon: const Icon(Icons.article_outlined),
-        label: const Text('বিস্তারিত এন্ট্রি ফর্ম'),
-      ),
-    );
-  }
-}
-
-class _QuickEntryForm extends StatefulWidget {
-  const _QuickEntryForm({
-    required this.entryController,
-    required this.customerController,
-    required this.onOpenFullForm,
-  });
-
-  final EntryController entryController;
-  final CustomerController customerController;
-  final VoidCallback onOpenFullForm;
-
-  @override
-  State<_QuickEntryForm> createState() => _QuickEntryFormState();
-}
-
-class _QuickEntryFormState extends State<_QuickEntryForm> {
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
-  EntryType _selectedType = EntryType.credit;
-  bool _isSaving = false;
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (_isSaving) return;
-
-    final selectedCustomerId = widget.entryController.selectedCustomerId.value;
-    final amountText = _amountController.text.trim();
-    final amount = double.tryParse(amountText);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    if (selectedCustomerId == null) {
-      Get.snackbar(
-        'কাস্টমার নেই',
-        'প্রথমে কাস্টমার নির্বাচন করুন',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: colorScheme.error,
-        colorText: colorScheme.onError,
-      );
-      return;
-    }
-
-    if (amount == null || amount <= 0) {
-      Get.snackbar(
-        'ভুল পরিমাণ',
-        'সঠিক টাকার পরিমাণ লিখুন',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: colorScheme.error,
-        colorText: colorScheme.onError,
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    final entry = Entry(
-      customerId: selectedCustomerId,
-      type: _selectedType,
-      amount: amount,
-      description: _noteController.text.trim().isEmpty
-          ? null
-          : _noteController.text.trim(),
-      date: DateTime.now(),
-      tags: const [],
-    );
-
-    await widget.entryController.createEntry(entry, closeAfterCreate: false);
-
-    if (!mounted) return;
-
-    setState(() {
-      _isSaving = false;
-      _amountController.clear();
-      _noteController.clear();
-      _selectedType = EntryType.credit;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'দ্রুত এন্ট্রি যোগ করুন',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Obx(() {
-              final customers = widget.customerController.customers
-                  .where((customer) => customer.id != null)
-                  .toList();
-              final selectedId =
-                  widget.entryController.selectedCustomerId.value;
-              return DropdownButtonFormField<int>(
-                key: ValueKey<int?>(selectedId),
-                initialValue: selectedId,
-                decoration: const InputDecoration(
-                  labelText: 'কাস্টমার নির্বাচন করুন *',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                items: customers
-                    .map(
-                      (customer) => DropdownMenuItem<int>(
-                        value: customer.id!,
-                        child: Text(customer.name),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  widget.entryController.selectedCustomerId.value = value;
-                },
-              );
-            }),
-            const SizedBox(height: 12),
-            ToggleButtons(
-              borderRadius: BorderRadius.circular(8),
-              isSelected: [
-                _selectedType == EntryType.credit,
-                _selectedType == EntryType.debit,
-              ],
-              onPressed: (index) {
-                setState(() {
-                  _selectedType =
-                      index == 0 ? EntryType.credit : EntryType.debit;
-                });
-              },
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('টাকা পাবো'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('টাকা দেবো'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              decoration: const InputDecoration(
-                labelText: 'টাকার পরিমাণ *',
-                prefixText: '৳ ',
-              ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'ছোট নোট (ঐচ্ছিক)',
-                prefixIcon: Icon(Icons.note_alt_outlined),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isSaving ? null : _submit,
-                    icon: _isSaving
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check),
-                    label: Text(_isSaving
-                        ? 'সংরক্ষণ হচ্ছে...'
-                        : 'এন্ট্রি সংরক্ষণ করুন'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: widget.onOpenFullForm,
-                  icon: const Icon(Icons.list_alt),
-                  label: const Text('বিস্তারিত ফর্ম'),
-                ),
-              ],
-            ),
-          ],
-        ),
+        label: const Text('এন্ট্রি যোগ করুন'),
       ),
     );
   }
@@ -427,6 +218,32 @@ void _showAddEntryDialog(
   final selectedType = Rx<EntryType>(EntryType.credit);
   final selectedDate = Rx<DateTime>(DateTime.now());
   final selectedCustomerId = Rx<int?>(controller.selectedCustomerId.value);
+  final selectedCustomer = Rx<Customer?>(null);
+  final RxString customerNameInput = ''.obs;
+  TextEditingController? customerFieldController;
+
+  void updateCustomerInput(String value) {
+    customerNameInput.value = value;
+    if (customerFieldController != null &&
+        customerFieldController!.text != value) {
+      customerFieldController!.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.fromPosition(
+          TextPosition(offset: value.length),
+        ),
+      );
+    }
+  }
+
+  final initialCustomerId = controller.selectedCustomerId.value;
+  if (initialCustomerId != null) {
+    final existing = customerController.getCustomerFromCache(initialCustomerId);
+    if (existing != null) {
+      selectedCustomer.value = existing;
+      updateCustomerInput(existing.name);
+      selectedCustomerId.value = existing.id;
+    }
+  }
 
   Get.dialog(
     AlertDialog(
@@ -436,20 +253,84 @@ void _showAddEntryDialog(
           mainAxisSize: MainAxisSize.min,
           children: [
             Obx(
-              () => DropdownMenu<int>(
-                label: const Text('কাস্টমার *'),
-                initialSelection: selectedCustomerId.value,
-                dropdownMenuEntries: customerController.customers
+              () {
+                final customers = customerController.customers
                     .where((customer) => customer.id != null)
-                    .map(
-                      (customer) => DropdownMenuEntry<int>(
-                        value: customer.id!,
-                        label: customer.name,
-                      ),
-                    )
-                    .toList(),
-                onSelected: (value) => selectedCustomerId.value = value,
-              ),
+                    .toList();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Autocomplete<Customer>(
+                      displayStringForOption: (customer) => customer.name,
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        final query =
+                            textEditingValue.text.trim().toLowerCase();
+                        if (query.isEmpty) {
+                          return customers;
+                        }
+                        return customers.where(
+                          (customer) =>
+                              customer.name.toLowerCase().contains(query),
+                        );
+                      },
+                      onSelected: (customer) {
+                        selectedCustomer.value = customer;
+                        selectedCustomerId.value = customer.id;
+                        updateCustomerInput(customer.name);
+                      },
+                      fieldViewBuilder: (
+                        BuildContext context,
+                        TextEditingController textEditingController,
+                        FocusNode focusNode,
+                        VoidCallback onFieldSubmitted,
+                      ) {
+                        customerFieldController = textEditingController;
+                        if (textEditingController.text !=
+                            customerNameInput.value) {
+                          textEditingController.value = TextEditingValue(
+                            text: customerNameInput.value,
+                            selection: TextSelection.fromPosition(
+                              TextPosition(
+                                  offset: customerNameInput.value.length),
+                            ),
+                          );
+                        }
+                        return TextField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'কাস্টমার *',
+                            prefixIcon: const Icon(Icons.person),
+                            suffixIcon: textEditingController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      textEditingController.clear();
+                                      updateCustomerInput('');
+                                      selectedCustomer.value = null;
+                                      selectedCustomerId.value = null;
+                                    },
+                                  ),
+                          ),
+                          onChanged: (value) {
+                            customerNameInput.value = value;
+                            selectedCustomer.value = null;
+                            selectedCustomerId.value = null;
+                          },
+                          textInputAction: TextInputAction.search,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'নতুন কাস্টমার তৈরি করতে নাম লিখে এন্ট্রি সংরক্ষণ করুন।',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
             Obx(
@@ -528,13 +409,61 @@ void _showAddEntryDialog(
       actions: [
         TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
         ElevatedButton(
-          onPressed: () {
-            if (amountController.text.isNotEmpty &&
-                selectedCustomerId.value != null) {
+          onPressed: () async {
+            final amountText = amountController.text.trim();
+            final amount = double.tryParse(amountText);
+            final name = customerNameInput.value.trim();
+            final colorScheme = Theme.of(context).colorScheme;
+
+            if ((selectedCustomerId.value == null ||
+                    selectedCustomerId.value! <= 0) &&
+                name.isEmpty) {
+              Get.snackbar(
+                'কাস্টমার নেই',
+                'প্রথমে কাস্টমার নির্বাচন করুন',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: colorScheme.error,
+                colorText: colorScheme.onError,
+              );
+              return;
+            }
+
+            if (amount == null || amount <= 0) {
+              Get.snackbar(
+                'ভুল পরিমাণ',
+                'সঠিক টাকার পরিমাণ লিখুন',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: colorScheme.error,
+                colorText: colorScheme.onError,
+              );
+              return;
+            }
+
+            var targetCustomerId = selectedCustomerId.value;
+            Customer? ensuredCustomer = selectedCustomer.value;
+
+            try {
+              if (targetCustomerId == null || targetCustomerId <= 0) {
+                ensuredCustomer = await customerController
+                    .createCustomerSilently(name);
+
+                targetCustomerId = ensuredCustomer.id;
+                if (targetCustomerId != null) {
+                  selectedCustomerId.value = targetCustomerId;
+                  selectedCustomer.value = ensuredCustomer;
+                  updateCustomerInput(ensuredCustomer.name);
+                  controller.selectedCustomerId.value = targetCustomerId;
+                }
+              }
+
+              if (targetCustomerId == null) {
+                throw ArgumentError('কাস্টমার নির্বাচন করা সম্ভব হয়নি');
+              }
+
               final entry = Entry(
-                customerId: selectedCustomerId.value!,
+                customerId: targetCustomerId,
                 type: selectedType.value,
-                amount: double.tryParse(amountController.text) ?? 0.0,
+                amount: amount,
                 description: descriptionController.text.isEmpty
                     ? null
                     : descriptionController.text,
@@ -546,14 +475,36 @@ void _showAddEntryDialog(
                         .map((e) => e.trim())
                         .toList(),
               );
-              controller.createEntry(entry);
+
+              await controller.createEntry(entry);
+            } on ArgumentError catch (error) {
+              Get.snackbar(
+                'ত্রুটি',
+                '${error.message ?? error}',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: colorScheme.error,
+                colorText: colorScheme.onError,
+              );
+            } catch (error) {
+              Get.snackbar(
+                'ত্রুটি',
+                'এন্ট্রি সংরক্ষণ করা যায়নি: $error',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: colorScheme.error,
+                colorText: colorScheme.onError,
+              );
             }
           },
           child: const Text('এন্ট্রি সংরক্ষণ করুন'),
         ),
       ],
     ),
-  );
+  ).whenComplete(() {
+    customerNameInput.close();
+    selectedCustomer.close();
+    selectedCustomerId.close();
+    customerFieldController?.dispose();
+  });
 }
 
 void _showEntryDetails(BuildContext context, Entry entry) {

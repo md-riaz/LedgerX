@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
@@ -10,6 +11,16 @@ class CustomerController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
 
+  Customer? _findCustomerInCacheByName(String lowerName) {
+    return customers.firstWhereOrNull(
+      (customer) => customer.name.toLowerCase() == lowerName,
+    );
+  }
+
+  Customer? getCustomerFromCache(int id) {
+    return customers.firstWhereOrNull((customer) => customer.id == id);
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -20,7 +31,11 @@ class CustomerController extends GetxController {
     try {
       isLoading.value = true;
       customers.value = await _repository.getAllCustomers();
-      filteredCustomers.assignAll(customers);
+      if (searchQuery.value.isEmpty) {
+        filteredCustomers.assignAll(customers);
+      } else {
+        searchCustomers(searchQuery.value);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -78,5 +93,49 @@ class CustomerController extends GetxController {
         return nameMatch || phoneMatch || addressMatch || notesMatch;
       }).toList();
     }
+  }
+
+  Future<Customer?> findCustomerByName(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      return null;
+    }
+
+    final lowerName = trimmedName.toLowerCase();
+    final cachedCustomer = _findCustomerInCacheByName(lowerName);
+    if (cachedCustomer != null) {
+      return cachedCustomer;
+    }
+
+    await loadCustomers();
+
+    return _findCustomerInCacheByName(lowerName);
+  }
+
+  Future<Customer> createCustomerSilently(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw ArgumentError('Customer name cannot be empty');
+    }
+
+    final existingCustomer = await findCustomerByName(trimmedName);
+    if (existingCustomer != null) {
+      return existingCustomer;
+    }
+
+    final newCustomer = Customer(name: trimmedName);
+    final id = await _repository.createCustomer(newCustomer);
+    final createdCustomer =
+        await _repository.getCustomerById(id) ?? newCustomer.copyWith(id: id);
+
+    customers.add(createdCustomer);
+
+    customers.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    customers.refresh();
+    searchCustomers(searchQuery.value);
+
+    return createdCustomer;
   }
 }
