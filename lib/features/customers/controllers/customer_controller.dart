@@ -10,6 +10,24 @@ class CustomerController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
 
+  Customer? _findCustomerInCacheByName(String lowerName) {
+    for (final customer in customers) {
+      if (customer.name.toLowerCase() == lowerName) {
+        return customer;
+      }
+    }
+    return null;
+  }
+
+  Customer? getCustomerFromCache(int id) {
+    for (final customer in customers) {
+      if (customer.id == id) {
+        return customer;
+      }
+    }
+    return null;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -91,21 +109,14 @@ class CustomerController extends GetxController {
     }
 
     final lowerName = trimmedName.toLowerCase();
-    for (final customer in customers) {
-      if (customer.name.toLowerCase() == lowerName) {
-        return customer;
-      }
+    final cachedCustomer = _findCustomerInCacheByName(lowerName);
+    if (cachedCustomer != null) {
+      return cachedCustomer;
     }
 
     await loadCustomers();
 
-    for (final customer in customers) {
-      if (customer.name.toLowerCase() == lowerName) {
-        return customer;
-      }
-    }
-
-    return null;
+    return _findCustomerInCacheByName(lowerName);
   }
 
   Future<Customer> createCustomerSilently(String name) async {
@@ -121,15 +132,21 @@ class CustomerController extends GetxController {
 
     final newCustomer = Customer(name: trimmedName);
     final id = await _repository.createCustomer(newCustomer);
-    final createdCustomer = newCustomer.copyWith(id: id);
+    final createdCustomer =
+        await _repository.getCustomerById(id) ?? newCustomer.copyWith(id: id);
 
-    await loadCustomers();
-
-    for (final customer in customers) {
-      if (customer.id == id) {
-        return customer;
-      }
+    final index = customers.indexWhere((customer) => customer.id == id);
+    if (index >= 0) {
+      customers[index] = createdCustomer;
+    } else {
+      customers.add(createdCustomer);
     }
+
+    customers.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    customers.refresh();
+    searchCustomers(searchQuery.value);
 
     return createdCustomer;
   }

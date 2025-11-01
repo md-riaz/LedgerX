@@ -222,18 +222,9 @@ void _showAddEntryDialog(
   final RxString customerNameInput = ''.obs;
   TextEditingController? customerFieldController;
 
-  Customer? findCustomerById(int id) {
-    for (final customer in customerController.customers) {
-      if (customer.id == id) {
-        return customer;
-      }
-    }
-    return null;
-  }
-
   final initialCustomerId = controller.selectedCustomerId.value;
   if (initialCustomerId != null) {
-    final existing = findCustomerById(initialCustomerId);
+    final existing = customerController.getCustomerFromCache(initialCustomerId);
     if (existing != null) {
       selectedCustomer.value = existing;
       customerNameInput.value = existing.name;
@@ -258,7 +249,8 @@ void _showAddEntryDialog(
                 if (currentSelectedId != null &&
                     (selectedCustomer.value == null ||
                         selectedCustomer.value!.id != currentSelectedId)) {
-                  final match = findCustomerById(currentSelectedId);
+                  final match =
+                      customerController.getCustomerFromCache(currentSelectedId);
                   if (match != null) {
                     selectedCustomer.value = match;
                     customerNameInput.value = match.name;
@@ -335,9 +327,7 @@ void _showAddEntryDialog(
                           onChanged: (value) {
                             customerNameInput.value = value;
                             selectedCustomer.value = null;
-                            if (value.isEmpty) {
-                              selectedCustomerId.value = null;
-                            }
+                            selectedCustomerId.value = null;
                           },
                           textInputAction: TextInputAction.search,
                         );
@@ -465,11 +455,7 @@ void _showAddEntryDialog(
             try {
               if (targetCustomerId == null || targetCustomerId <= 0) {
                 ensuredCustomer = await customerController
-                    .findCustomerByName(name);
-                if (ensuredCustomer == null) {
-                  ensuredCustomer = await customerController
-                      .createCustomerSilently(name);
-                }
+                    .createCustomerSilently(name);
 
                 targetCustomerId = ensuredCustomer.id;
                 if (targetCustomerId != null) {
