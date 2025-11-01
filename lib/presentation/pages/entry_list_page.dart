@@ -331,7 +331,12 @@ class _QuickEntryFormState extends State<_QuickEntryForm> {
     try {
       if (targetCustomerId == null || targetCustomerId <= 0) {
         ensuredCustomer = await widget.customerController
-            .findOrCreateCustomerByName(trimmedName);
+            .findCustomerByName(trimmedName);
+        if (ensuredCustomer == null) {
+          ensuredCustomer = await widget.customerController
+              .createCustomerSilently(trimmedName);
+        }
+
         targetCustomerId = ensuredCustomer.id;
         if (targetCustomerId != null) {
           widget.entryController.selectedCustomerId.value = targetCustomerId;
@@ -827,7 +832,12 @@ void _showAddEntryDialog(
             try {
               if (targetCustomerId == null || targetCustomerId <= 0) {
                 ensuredCustomer = await customerController
-                    .findOrCreateCustomerByName(name);
+                    .findCustomerByName(name);
+                if (ensuredCustomer == null) {
+                  ensuredCustomer = await customerController
+                      .createCustomerSilently(name);
+                }
+
                 targetCustomerId = ensuredCustomer.id;
                 if (targetCustomerId != null) {
                   selectedCustomerId.value = targetCustomerId;

@@ -84,20 +84,37 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<Customer> findOrCreateCustomerByName(String name) async {
+  Future<Customer?> findCustomerByName(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      return null;
+    }
+
+    final lowerName = trimmedName.toLowerCase();
+    for (final customer in customers) {
+      if (customer.name.toLowerCase() == lowerName) {
+        return customer;
+      }
+    }
+
+    await loadCustomers();
+
+    for (final customer in customers) {
+      if (customer.name.toLowerCase() == lowerName) {
+        return customer;
+      }
+    }
+
+    return null;
+  }
+
+  Future<Customer> createCustomerSilently(String name) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
       throw ArgumentError('Customer name cannot be empty');
     }
 
-    Customer? existingCustomer;
-    for (final customer in customers) {
-      if (customer.name.toLowerCase() == trimmedName.toLowerCase()) {
-        existingCustomer = customer;
-        break;
-      }
-    }
-
+    final existingCustomer = await findCustomerByName(trimmedName);
     if (existingCustomer != null) {
       return existingCustomer;
     }
