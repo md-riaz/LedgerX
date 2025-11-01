@@ -20,7 +20,11 @@ class CustomerController extends GetxController {
     try {
       isLoading.value = true;
       customers.value = await _repository.getAllCustomers();
-      filteredCustomers.assignAll(customers);
+      if (searchQuery.value.isEmpty) {
+        filteredCustomers.assignAll(customers);
+      } else {
+        searchCustomers(searchQuery.value);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -78,5 +82,38 @@ class CustomerController extends GetxController {
         return nameMatch || phoneMatch || addressMatch || notesMatch;
       }).toList();
     }
+  }
+
+  Future<Customer> findOrCreateCustomerByName(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw ArgumentError('Customer name cannot be empty');
+    }
+
+    Customer? existingCustomer;
+    for (final customer in customers) {
+      if (customer.name.toLowerCase() == trimmedName.toLowerCase()) {
+        existingCustomer = customer;
+        break;
+      }
+    }
+
+    if (existingCustomer != null) {
+      return existingCustomer;
+    }
+
+    final newCustomer = Customer(name: trimmedName);
+    final id = await _repository.createCustomer(newCustomer);
+    final createdCustomer = newCustomer.copyWith(id: id);
+
+    await loadCustomers();
+
+    for (final customer in customers) {
+      if (customer.id == id) {
+        return customer;
+      }
+    }
+
+    return createdCustomer;
   }
 }
