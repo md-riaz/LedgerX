@@ -222,12 +222,25 @@ void _showAddEntryDialog(
   final RxString customerNameInput = ''.obs;
   TextEditingController? customerFieldController;
 
+  void updateCustomerInput(String value) {
+    customerNameInput.value = value;
+    if (customerFieldController != null &&
+        customerFieldController!.text != value) {
+      customerFieldController!.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.fromPosition(
+          TextPosition(offset: value.length),
+        ),
+      );
+    }
+  }
+
   final initialCustomerId = controller.selectedCustomerId.value;
   if (initialCustomerId != null) {
     final existing = customerController.getCustomerFromCache(initialCustomerId);
     if (existing != null) {
       selectedCustomer.value = existing;
-      customerNameInput.value = existing.name;
+      updateCustomerInput(existing.name);
       selectedCustomerId.value = existing.id;
     }
   }
@@ -244,29 +257,6 @@ void _showAddEntryDialog(
                 final customers = customerController.customers
                     .where((customer) => customer.id != null)
                     .toList();
-
-                final currentSelectedId = selectedCustomerId.value;
-                if (currentSelectedId != null &&
-                    (selectedCustomer.value == null ||
-                        selectedCustomer.value!.id != currentSelectedId)) {
-                  final match =
-                      customerController.getCustomerFromCache(currentSelectedId);
-                  if (match != null) {
-                    selectedCustomer.value = match;
-                    customerNameInput.value = match.name;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (customerFieldController != null &&
-                          customerFieldController!.text != match.name) {
-                        customerFieldController!.value = TextEditingValue(
-                          text: match.name,
-                          selection: TextSelection.fromPosition(
-                            TextPosition(offset: match.name.length),
-                          ),
-                        );
-                      }
-                    });
-                  }
-                }
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +277,7 @@ void _showAddEntryDialog(
                       onSelected: (customer) {
                         selectedCustomer.value = customer;
                         selectedCustomerId.value = customer.id;
-                        customerNameInput.value = customer.name;
+                        updateCustomerInput(customer.name);
                       },
                       fieldViewBuilder: (
                         BuildContext context,
@@ -318,7 +308,7 @@ void _showAddEntryDialog(
                                     icon: const Icon(Icons.clear),
                                     onPressed: () {
                                       textEditingController.clear();
-                                      customerNameInput.value = '';
+                                      updateCustomerInput('');
                                       selectedCustomer.value = null;
                                       selectedCustomerId.value = null;
                                     },
@@ -461,7 +451,7 @@ void _showAddEntryDialog(
                 if (targetCustomerId != null) {
                   selectedCustomerId.value = targetCustomerId;
                   selectedCustomer.value = ensuredCustomer;
-                  customerNameInput.value = ensuredCustomer.name;
+                  updateCustomerInput(ensuredCustomer.name);
                   controller.selectedCustomerId.value = targetCustomerId;
                 }
               }
@@ -513,6 +503,7 @@ void _showAddEntryDialog(
     customerNameInput.close();
     selectedCustomer.close();
     selectedCustomerId.close();
+    customerFieldController?.dispose();
   });
 }
 

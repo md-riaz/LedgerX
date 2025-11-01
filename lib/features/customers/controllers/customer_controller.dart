@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
@@ -11,21 +12,13 @@ class CustomerController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   Customer? _findCustomerInCacheByName(String lowerName) {
-    for (final customer in customers) {
-      if (customer.name.toLowerCase() == lowerName) {
-        return customer;
-      }
-    }
-    return null;
+    return customers.firstWhereOrNull(
+      (customer) => customer.name.toLowerCase() == lowerName,
+    );
   }
 
   Customer? getCustomerFromCache(int id) {
-    for (final customer in customers) {
-      if (customer.id == id) {
-        return customer;
-      }
-    }
-    return null;
+    return customers.firstWhereOrNull((customer) => customer.id == id);
   }
 
   @override
@@ -135,12 +128,7 @@ class CustomerController extends GetxController {
     final createdCustomer =
         await _repository.getCustomerById(id) ?? newCustomer.copyWith(id: id);
 
-    final index = customers.indexWhere((customer) => customer.id == id);
-    if (index >= 0) {
-      customers[index] = createdCustomer;
-    } else {
-      customers.add(createdCustomer);
-    }
+    customers.add(createdCustomer);
 
     customers.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
