@@ -27,55 +27,17 @@ const _windowsGuid = '5a829a22-59c3-4b8f-a8d5-28c8a4630bd8';
 final FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin =
     PlatformUtils.isWeb ? null : FlutterLocalNotificationsPlugin();
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('bn_BD');
-  Intl.defaultLocale = 'bn_BD';
 
-  tzdata.initializeTimeZones();
-  try {
-    tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
-  } catch (_) {
-    tz.setLocalLocation(tz.getLocation('UTC'));
-  }
+  await _initializeLocalization();
+  await _initializeTimeZone();
 
-  final database = LedgerDatabase();
-  await database.warmUp();
-  Get.put<LedgerDatabase>(database, permanent: true);
-  Get.put<ThemeController>(ThemeController(), permanent: true);
-
-  final authController =
-      Get.put(AuthController(database: database), permanent: true);
-  await authController.restoreSession();
+  final database = await _initializeDatabase();
+  final authController = await _initializeAuthentication(database);
+  await _initializeNotifications();
 
   final initialRoute = authController.isLoggedIn.value ? '/' : '/login';
-
-  if (PlatformUtils.isWeb) {
-    debugPrint('LedgerX: ওয়েবে লোকাল নোটিফিকেশন এখনো সমর্থিত নয়।');
-  } else {
-    // Initialize notifications
-    const initializationSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      iOS: DarwinInitializationSettings(),
-      macOS: DarwinInitializationSettings(),
-      linux: LinuxInitializationSettings(
-        defaultActionName: 'Open notification',
-      ),
-      windows: WindowsInitializationSettings(
-        appName: _windowsAppName,
-        appUserModelId: _windowsAppUserModelId,
-        guid: _windowsGuid,
-      ),
-    );
-
-    await flutterLocalNotificationsPlugin!.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap
-      },
-    );
-  }
-
   runApp(LedgerXApp(initialRoute: initialRoute));
 }
 
@@ -102,19 +64,12 @@ class LedgerXApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeController.themeMode.value,
-        initialRoute: '/login',
-        initialBinding: BindingsBuilder(() {
-          Get.put(AuthController());
-          Get.put(CustomerController());
-          Get.put(EntryController());
-        }),
+        initialRoute: initialRoute,
+        initialBinding: AppBindings(),
         getPages: [
           GetPage(
             name: '/login',
             page: () => const LoginPage(),
-            binding: BindingsBuilder(() {
-              Get.lazyPut(() => AuthController());
-            }),
           ),
           GetPage(
             name: '/',
@@ -140,6 +95,75 @@ class LedgerXApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
       ),
     );
+  }
+}
+
+Future<void> _initializeLocalization() async {
+  await initializeDateFormatting('bn_BD');
+  Intl.defaultLocale = 'bn_BD';
+}
+
+Future<void> _initializeTimeZone() async {
+  tzdata.initializeTimeZones();
+  try {
+    tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+  } catch (_) {
+    tz.setLocalLocation(tz.getLocation('UTC'));
+  }
+}
+
+Future<LedgerDatabase> _initializeDatabase() async {
+  final database = LedgerDatabase();
+  await database.warmUp();
+  Get.put<LedgerDatabase>(database, permanent: true);
+  Get.put<ThemeController>(ThemeController(), permanent: true);
+  return database;
+}
+
+Future<AuthController> _initializeAuthentication(LedgerDatabase database) async {
+  final authController =
+      Get.put(AuthController(database: database), permanent: true);
+  await authController.restoreSession();
+  return authController;
+}
+
+Future<void> _initializeNotifications() async {
+  if (PlatformUtils.isWeb) {
+    debugPrint('LedgerX: ওয়েবে লোকাল নোটিফিকেশন এখনো সমর্থিত নয়।');
+    return;
+  }
+
+  const initializationSettings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    iOS: DarwinInitializationSettings(),
+    macOS: DarwinInitializationSettings(),
+    linux: LinuxInitializationSettings(
+      defaultActionName: 'Open notification',
+    ),
+    windows: WindowsInitializationSettings(
+      appName: _windowsAppName,
+      appUserModelId: _windowsAppUserModelId,
+      guid: _windowsGuid,
+    ),
+  );
+
+  await flutterLocalNotificationsPlugin!.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // Handle notification tap
+    },
+  );
+}
+
+class AppBindings extends Bindings {
+  @override
+  void dependencies() {
+    if (!Get.isRegistered<CustomerController>()) {
+      Get.lazyPut(CustomerController.new, fenix: true);
+    }
+    if (!Get.isRegistered<EntryController>()) {
+      Get.lazyPut(EntryController.new, fenix: true);
+    }
   }
 }
 

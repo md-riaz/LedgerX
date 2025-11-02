@@ -23,3 +23,21 @@
 
 ## Captured preview
 - Preview screenshot: `artifacts/ledgerx_web_after_fix.png`.
+
+---
+
+## 2025-11-02 environment refresh
+
+### Flutter installation
+- Cloned the stable Flutter SDK to `/opt/flutter` and ran `flutter doctor -v`.
+- Doctor flagged missing Android SDK/Studio, Chrome, and GTK/mesa-utils packages, but verified the Linux desktop device and proxy configuration.
+
+### Dependency synchronization
+- `flutter pub get` refreshed 138 packages (six still have newer breaking versions available).
+
+### Automated testing
+- `flutter test` currently executes the database helper suite, which passed end-to-end.
+
+### Web server smoke test
+- `flutter run -d web-server --web-hostname 0.0.0.0 --web-port 5000` served `lib/main.dart` with the same `serviceWorkerVersion` and `FlutterLoader.loadEntrypoint` deprecation warnings noted earlier.
+- Captured a live preview screenshot at `artifacts/ledgerx-web.png` once the page finished loading.
