@@ -3,8 +3,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
-import 'package:ledgerx/domain/entities/entry.dart';
-
 import '../controllers/entry_controller.dart';
 import '../widgets/dashboard_card.dart';
 
@@ -78,10 +76,7 @@ class HomePage extends StatelessWidget {
                     DashboardCard(
                       title: 'টাকা পাবো',
                       count: _formatAmount(
-                        _calculateTotal(
-                          entryController.entries,
-                          EntryType.credit,
-                        ),
+                        entryController.totalCredit.value,
                       ),
                       icon: Icons.add_circle,
                       color: Colors.teal,
@@ -90,10 +85,7 @@ class HomePage extends StatelessWidget {
                     DashboardCard(
                       title: 'টাকা দেবো',
                       count: _formatAmount(
-                        _calculateTotal(
-                          entryController.entries,
-                          EntryType.debit,
-                        ),
+                        entryController.totalDebit.value,
                       ),
                       icon: Icons.remove_circle,
                       color: Colors.orange,
@@ -145,12 +137,6 @@ class HomePage extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  double _calculateTotal(Iterable<Entry> entries, EntryType type) {
-    return entries
-        .where((entry) => entry.type == type)
-        .fold<double>(0, (sum, entry) => sum + entry.amount);
   }
 
   String _formatAmount(double amount) {
