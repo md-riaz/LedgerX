@@ -62,18 +62,9 @@ class EntryListPage extends StatelessWidget {
                         if (snapshot.hasData) {
                           final balance = snapshot.data!;
                           final isReceivable = balance >= 0;
-                          final String statusLabel;
-                          final String amountLabel;
-                          final String helperText;
-                          if (isReceivable) {
-                            statusLabel = 'গ্রাহকের কাছ থেকে পাওনা';
-                            amountLabel = 'পাওনা: ৳${balance.abs().toStringAsFixed(2)}';
-                            helperText = 'এই পরিমাণ গ্রাহকের কাছ থেকে গ্রহণযোগ্য।';
-                          } else {
-                            statusLabel = 'গ্রাহককে দিতে হবে';
-                            amountLabel = 'দেনা: ৳${balance.abs().toStringAsFixed(2)}';
-                            helperText = 'এই পরিমাণ গ্রাহককে প্রদান করতে হবে।';
-                          }
+                          final statusLabel = isReceivable ? 'গ্রাহকের কাছ থেকে পাওনা' : 'গ্রাহককে দিতে হবে';
+                          final amountLabel = '${isReceivable ? 'পাওনা' : 'দেনা'}: ৳${balance.abs().toStringAsFixed(2)}';
+                          final helperText = isReceivable ? 'এই পরিমাণ গ্রাহকের কাছ থেকে গ্রহণযোগ্য।' : 'এই পরিমাণ গ্রাহককে প্রদান করতে হবে。';
 
                           return Card(
                             child: Padding(
