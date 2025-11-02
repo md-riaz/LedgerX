@@ -83,9 +83,9 @@ class EntryListPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     statusLabel,
-                                    style: const TextStyle(
-                                      fontSize: 18,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
