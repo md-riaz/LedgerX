@@ -6,11 +6,24 @@ import '../controllers/auth_controller.dart';
 class LoginPage extends GetView<AuthController> {
   const LoginPage({super.key});
 
+  static bool _autoLoginTriggered = false;
+
   @override
   Widget build(BuildContext context) {
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
+    final usernameController = TextEditingController(text: 'demo@ledgerx');
+    final passwordController = TextEditingController(text: 'password123');
     final isLoading = false.obs;
+
+    if (!_autoLoginTriggered) {
+      _autoLoginTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleLogin(
+          usernameController.text,
+          passwordController.text,
+          isLoading,
+        );
+      });
+    }
 
     return Scaffold(
       body: Center(
