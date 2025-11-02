@@ -4,7 +4,14 @@ import '../../data/repositories/entry_repository_impl.dart';
 import '../../domain/entities/entry.dart';
 
 class EntryController extends GetxController {
-  final EntryRepositoryImpl _repository = EntryRepositoryImpl();
+  EntryController({
+    EntryRepositoryImpl? repository,
+    bool enableFeedback = true,
+  })  : _repository = repository ?? EntryRepositoryImpl(),
+        _enableFeedback = enableFeedback;
+
+  final EntryRepositoryImpl _repository;
+  final bool _enableFeedback;
 
   final RxList<Entry> entries = <Entry>[].obs;
   final RxList<Entry> filteredEntries = <Entry>[].obs;
@@ -21,12 +28,10 @@ class EntryController extends GetxController {
   Future<void> loadEntries() async {
     try {
       isLoading.value = true;
-      if (selectedCustomerId.value != null) {
-        entries.value =
-            await _repository.getEntriesByCustomer(selectedCustomerId.value!);
-      } else {
-        entries.value = await _repository.getAllEntries();
-      }
+      final loadedEntries = selectedCustomerId.value != null
+          ? await _repository.getEntriesByCustomer(selectedCustomerId.value!)
+          : await _repository.getAllEntries();
+      entries.assignAll(loadedEntries);
       filteredEntries.assignAll(entries);
     } finally {
       isLoading.value = false;
@@ -41,34 +46,33 @@ class EntryController extends GetxController {
   Future<void> createEntry(Entry entry, {bool closeAfterCreate = true}) async {
     await _repository.createEntry(entry);
     await loadEntries();
-    if (closeAfterCreate && Get.isDialogOpen == true) {
+    if (_enableFeedback && closeAfterCreate && Get.isDialogOpen == true) {
       Get.back();
     }
-    Get.snackbar(
+    _showSuccess(
       'সফল',
       'এন্ট্রি সফলভাবে যোগ হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   Future<void> updateEntry(Entry entry) async {
     await _repository.updateEntry(entry);
     await loadEntries();
-    Get.back();
-    Get.snackbar(
+    if (_enableFeedback && Get.isDialogOpen == true) {
+      Get.back();
+    }
+    _showSuccess(
       'সফল',
       'এন্ট্রি সফলভাবে হালনাগাদ হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   Future<void> deleteEntry(int id) async {
     await _repository.deleteEntry(id);
     await loadEntries();
-    Get.snackbar(
+    _showSuccess(
       'সফল',
       'এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
@@ -86,7 +90,8 @@ class EntryController extends GetxController {
               entry.description?.toLowerCase().contains(query.toLowerCase()) ??
               false ||
                   entry.tags.any(
-                      (tag) => tag.toLowerCase().contains(query.toLowerCase())))
+                    (tag) => tag.toLowerCase().contains(query.toLowerCase()),
+                  ))
           .toList();
     }
   }
@@ -96,5 +101,16 @@ class EntryController extends GetxController {
       selectedCustomerId.value = null;
       await loadEntries();
     }
+  }
+
+  void _showSuccess(String title, String message) {
+    if (!_enableFeedback || Get.testMode) {
+      return;
+    }
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }

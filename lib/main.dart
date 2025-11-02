@@ -98,11 +98,17 @@ class LedgerXApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeController.themeMode.value,
-        initialRoute: '/login',
+        initialRoute: initialRoute,
         initialBinding: BindingsBuilder(() {
-          Get.put(AuthController());
-          Get.put(CustomerController());
-          Get.put(EntryController());
+          if (!Get.isRegistered<AuthController>()) {
+            Get.put(AuthController(database: Get.find()), permanent: true);
+          }
+          if (!Get.isRegistered<CustomerController>()) {
+            Get.lazyPut(CustomerController.new, fenix: true);
+          }
+          if (!Get.isRegistered<EntryController>()) {
+            Get.lazyPut(EntryController.new, fenix: true);
+          }
         }),
         getPages: [
           GetPage(

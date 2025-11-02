@@ -4,7 +4,14 @@ import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
 
 class CustomerController extends GetxController {
-  final CustomerRepositoryImpl _repository = CustomerRepositoryImpl();
+  CustomerController({
+    CustomerRepositoryImpl? repository,
+    bool enableFeedback = true,
+  })  : _repository = repository ?? CustomerRepositoryImpl(),
+        _enableFeedback = enableFeedback;
+
+  final CustomerRepositoryImpl _repository;
+  final bool _enableFeedback;
 
   final RxList<Customer> customers = <Customer>[].obs;
   final RxList<Customer> filteredCustomers = <Customer>[].obs;
@@ -30,7 +37,8 @@ class CustomerController extends GetxController {
   Future<void> loadCustomers() async {
     try {
       isLoading.value = true;
-      customers.value = await _repository.getAllCustomers();
+      final allCustomers = await _repository.getAllCustomers();
+      customers.assignAll(allCustomers);
       if (searchQuery.value.isEmpty) {
         filteredCustomers.assignAll(customers);
       } else {
@@ -41,38 +49,39 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> createCustomer(Customer customer,
-      {bool closeAfterCreate = true}) async {
+  Future<void> createCustomer(
+    Customer customer, {
+    bool closeAfterCreate = true,
+  }) async {
     await _repository.createCustomer(customer);
     await loadCustomers();
-    if (closeAfterCreate && Get.isDialogOpen == true) {
+    if (_enableFeedback && closeAfterCreate && Get.isDialogOpen == true) {
       Get.back();
     }
-    Get.snackbar(
+    _showSuccess(
       'সফল',
       'কাস্টমার সফলভাবে যোগ হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   Future<void> updateCustomer(Customer customer) async {
     await _repository.updateCustomer(customer);
     await loadCustomers();
-    Get.back();
-    Get.snackbar(
+    if (_enableFeedback && Get.isDialogOpen == true) {
+      Get.back();
+    }
+    _showSuccess(
       'সফল',
       'কাস্টমার সফলভাবে হালনাগাদ হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
   Future<void> deleteCustomer(int id) async {
     await _repository.deleteCustomer(id);
     await loadCustomers();
-    Get.snackbar(
+    _showSuccess(
       'সফল',
       'কাস্টমার সফলভাবে মুছে ফেলা হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
     );
   }
 
@@ -137,5 +146,16 @@ class CustomerController extends GetxController {
     searchCustomers(searchQuery.value);
 
     return createdCustomer;
+  }
+
+  void _showSuccess(String title, String message) {
+    if (!_enableFeedback || Get.testMode) {
+      return;
+    }
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }
