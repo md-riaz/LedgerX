@@ -61,29 +61,39 @@ class EntryListPage extends StatelessWidget {
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           final balance = snapshot.data!;
+                          final isReceivable = balance >= 0;
+                          final statusLabel = isReceivable ? 'গ্রাহকের কাছ থেকে পাওনা' : 'গ্রাহককে দিতে হবে';
+                          final amountLabel = '${isReceivable ? 'পাওনা' : 'দেনা'}: ৳${balance.abs().toStringAsFixed(2)}';
+                          final helperText = isReceivable ? 'এই পরিমাণ গ্রাহকের কাছ থেকে গ্রহণযোগ্য।' : 'এই পরিমাণ গ্রাহককে প্রদান করতে হবে。';
+
                           return Card(
                             child: Padding(
                               padding: const EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'ব্যালেন্স:',
-                                    style: TextStyle(
-                                      fontSize: 18,
+                                  Text(
+                                    statusLabel,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
                                   ),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    '৳${balance.toStringAsFixed(2)}',
+                                    amountLabel,
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: balance >= 0
+                                      color: isReceivable
                                           ? AppTheme.creditColor
                                           : AppTheme.debitColor,
                                     ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    helperText,
+                                    style: Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ],
                               ),
