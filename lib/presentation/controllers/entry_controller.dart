@@ -18,10 +18,13 @@ class EntryController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
   final Rx<int?> selectedCustomerId = Rx<int?>(null);
+  final RxDouble totalCredit = 0.0.obs;
+  final RxDouble totalDebit = 0.0.obs;
 
   @override
   void onInit() {
     super.onInit();
+    ever(entries, (_) => _calculateTotals());
     loadEntries();
   }
 
@@ -33,6 +36,7 @@ class EntryController extends GetxController {
           : await _repository.getAllEntries();
       entries.assignAll(loadedEntries);
       filteredEntries.assignAll(entries);
+      _calculateTotals();
     } finally {
       isLoading.value = false;
     }
@@ -152,5 +156,19 @@ class EntryController extends GetxController {
       message,
       snackPosition: SnackPosition.BOTTOM,
     );
+  void _calculateTotals() {
+    var credit = 0.0;
+    var debit = 0.0;
+
+    for (final entry in entries) {
+      if (entry.type == EntryType.credit) {
+        credit += entry.amount;
+      } else if (entry.type == EntryType.debit) {
+        debit += entry.amount;
+      }
+    }
+
+    totalCredit.value = credit;
+    totalDebit.value = debit;
   }
 }

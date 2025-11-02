@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
-
 import '../controllers/entry_controller.dart';
 import '../widgets/dashboard_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  static final NumberFormat _currencyFormatter = NumberFormat.currency(
+    locale: 'bn_BD',
+    symbol: '৳',
+    decimalDigits: 2,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -69,14 +75,18 @@ class HomePage extends StatelessWidget {
                     ),
                     DashboardCard(
                       title: 'টাকা পাবো',
-                      count: _getCreditsCount(entryController.entries),
+                      count: _formatAmount(
+                        entryController.totalCredit.value,
+                      ),
                       icon: Icons.add_circle,
                       color: Colors.teal,
                       onTap: () => Get.toNamed('/entries'),
                     ),
                     DashboardCard(
                       title: 'টাকা দেবো',
-                      count: _getDebitsCount(entryController.entries),
+                      count: _formatAmount(
+                        entryController.totalDebit.value,
+                      ),
                       icon: Icons.remove_circle,
                       color: Colors.orange,
                       onTap: () => Get.toNamed('/entries'),
@@ -129,12 +139,8 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  String _getCreditsCount(List entries) {
-    return entries.where((e) => e.type.name == 'credit').length.toString();
-  }
-
-  String _getDebitsCount(List entries) {
-    return entries.where((e) => e.type.name == 'debit').length.toString();
+  String _formatAmount(double amount) {
+    return _currencyFormatter.format(amount);
   }
 
   void _showSearch(BuildContext context) {
