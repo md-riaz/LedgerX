@@ -44,8 +44,19 @@ class EntryController extends GetxController {
   }
 
   Future<void> createEntry(Entry entry, {bool closeAfterCreate = true}) async {
-    await _repository.createEntry(entry);
-    await loadEntries();
+    final newEntryId = await _repository.createEntry(entry);
+    final createdEntry =
+        await _repository.getEntryById(newEntryId) ?? entry.copyWith(id: newEntryId);
+
+    if (selectedCustomerId.value == null ||
+        selectedCustomerId.value == createdEntry.customerId) {
+      entries.add(createdEntry);
+      entries.sort((a, b) => b.date.compareTo(a.date));
+      entries.refresh();
+      searchEntries(searchQuery.value);
+    } else {
+      await loadEntries();
+    }
     if (_enableFeedback && closeAfterCreate && Get.isDialogOpen == true) {
       Get.back();
     }
@@ -57,7 +68,29 @@ class EntryController extends GetxController {
 
   Future<void> updateEntry(Entry entry) async {
     await _repository.updateEntry(entry);
-    await loadEntries();
+    final updatedEntry = entry.id == null
+        ? null
+        : await _repository.getEntryById(entry.id!);
+
+    if (updatedEntry != null) {
+      final matchesFilter = selectedCustomerId.value == null ||
+          selectedCustomerId.value == updatedEntry.customerId;
+      if (matchesFilter) {
+        final index = entries.indexWhere((e) => e.id == updatedEntry.id);
+        if (index != -1) {
+          entries[index] = updatedEntry;
+          entries.sort((a, b) => b.date.compareTo(a.date));
+          entries.refresh();
+          searchEntries(searchQuery.value);
+        } else {
+          await loadEntries();
+        }
+      } else {
+        await loadEntries();
+      }
+    } else {
+      await loadEntries();
+    }
     if (_enableFeedback && Get.isDialogOpen == true) {
       Get.back();
     }
@@ -69,7 +102,14 @@ class EntryController extends GetxController {
 
   Future<void> deleteEntry(int id) async {
     await _repository.deleteEntry(id);
-    await loadEntries();
+    final previousLength = entries.length;
+    entries.removeWhere((entry) => entry.id == id);
+    if (previousLength != entries.length) {
+      entries.refresh();
+      searchEntries(searchQuery.value);
+    } else {
+      await loadEntries();
+    }
     _showSuccess(
       'সফল',
       'এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে',

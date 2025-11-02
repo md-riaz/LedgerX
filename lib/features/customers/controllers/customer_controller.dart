@@ -53,8 +53,18 @@ class CustomerController extends GetxController {
     Customer customer, {
     bool closeAfterCreate = true,
   }) async {
-    await _repository.createCustomer(customer);
-    await loadCustomers();
+    final newCustomerId = await _repository.createCustomer(customer);
+    final createdCustomer =
+        await _repository.getCustomerById(newCustomerId) ??
+            customer.copyWith(id: newCustomerId);
+
+    customers.add(createdCustomer);
+    customers.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    customers.refresh();
+    searchCustomers(searchQuery.value);
+
     if (_enableFeedback && closeAfterCreate && Get.isDialogOpen == true) {
       Get.back();
     }
@@ -66,7 +76,25 @@ class CustomerController extends GetxController {
 
   Future<void> updateCustomer(Customer customer) async {
     await _repository.updateCustomer(customer);
-    await loadCustomers();
+    final updatedCustomer = customer.id == null
+        ? null
+        : await _repository.getCustomerById(customer.id!);
+
+    if (updatedCustomer != null) {
+      final index = customers.indexWhere((c) => c.id == updatedCustomer.id);
+      if (index != -1) {
+        customers[index] = updatedCustomer;
+        customers.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+        customers.refresh();
+        searchCustomers(searchQuery.value);
+      } else {
+        await loadCustomers();
+      }
+    } else {
+      await loadCustomers();
+    }
     if (_enableFeedback && Get.isDialogOpen == true) {
       Get.back();
     }
@@ -78,7 +106,14 @@ class CustomerController extends GetxController {
 
   Future<void> deleteCustomer(int id) async {
     await _repository.deleteCustomer(id);
-    await loadCustomers();
+    final previousLength = customers.length;
+    customers.removeWhere((customer) => customer.id == id);
+    if (previousLength != customers.length) {
+      customers.refresh();
+      searchCustomers(searchQuery.value);
+    } else {
+      await loadCustomers();
+    }
     _showSuccess(
       'সফল',
       'কাস্টমার সফলভাবে মুছে ফেলা হয়েছে',
