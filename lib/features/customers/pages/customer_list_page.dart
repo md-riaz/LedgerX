@@ -186,7 +186,7 @@ class CustomerListPage extends GetView<CustomerController> {
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.trim().isEmpty) {
                 Get.snackbar(
                   'ত্রুটি',
@@ -210,7 +210,7 @@ class CustomerListPage extends GetView<CustomerController> {
                     ? null
                     : notesController.text.trim(),
               );
-              controller.createCustomer(customer);
+              await controller.createCustomer(customer);
             },
             child: const Text('কাস্টমার সংরক্ষণ করুন'),
           ),
@@ -477,15 +477,17 @@ class _QuickAddCustomerCardState extends State<_QuickAddCustomerCard> {
       phone: phone.isEmpty ? null : phone,
     );
 
-    await widget.controller
+    final created = await widget.controller
         .createCustomer(customer, closeAfterCreate: false);
 
     if (!mounted) return;
 
     setState(() {
       _isSaving = false;
-      _nameController.clear();
-      _phoneController.clear();
+      if (created) {
+        _nameController.clear();
+        _phoneController.clear();
+      }
     });
   }
 

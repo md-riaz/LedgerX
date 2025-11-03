@@ -1,4 +1,8 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
@@ -13,16 +17,14 @@ class CustomerController extends GetxController {
   final CustomerRepositoryImpl _repository;
   final bool _enableFeedback;
 
+  static final RegExp _whitespaceRegex = RegExp(r'\s+');
+  static final RegExp _nonAlphaNumericRegex =
+      RegExp(r'[^a-z0-9\u0980-\u09FF ]');
+
   final RxList<Customer> customers = <Customer>[].obs;
   final RxList<Customer> filteredCustomers = <Customer>[].obs;
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
-
-  Customer? _findCustomerInCacheByName(String lowerName) {
-    return customers.firstWhereOrNull(
-      (customer) => customer.name.toLowerCase() == lowerName,
-    );
-  }
 
   Customer? getCustomerFromCache(int id) {
     return customers.firstWhereOrNull((customer) => customer.id == id);
@@ -49,14 +51,39 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> createCustomer(
+  Future<bool> createCustomer(
     Customer customer, {
     bool closeAfterCreate = true,
   }) async {
-    final newCustomerId = await _repository.createCustomer(customer);
-    final createdCustomer =
-        await _repository.getCustomerById(newCustomerId) ??
-            customer.copyWith(id: newCustomerId);
+    final sanitizedCustomer = Customer(
+      id: customer.id,
+      name: customer.name.trim(),
+      phone: _sanitizeOptionalField(customer.phone),
+      address: _sanitizeOptionalField(customer.address),
+      notes: _sanitizeOptionalField(customer.notes),
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+    );
+
+    if (sanitizedCustomer.name.isEmpty) {
+      _showWarning('ত্রুটি', 'কাস্টমারের নাম লিখুন');
+      return false;
+    }
+
+    final canProceed = await _ensureNoDuplicateOrWarn(sanitizedCustomer.name);
+    if (!canProceed) {
+      return false;
+    }
+
+    Customer createdCustomer;
+    try {
+      final newCustomerId = await _repository.createCustomer(sanitizedCustomer);
+      createdCustomer = await _repository.getCustomerById(newCustomerId) ??
+          sanitizedCustomer.copyWith(id: newCustomerId);
+    } catch (e) {
+      _showWarning('ত্রুটি', 'কাস্টমার যোগ করতে ব্যর্থ হয়েছে।');
+      return false;
+    }
 
     customers.add(createdCustomer);
     customers.sort(
@@ -72,6 +99,7 @@ class CustomerController extends GetxController {
       'সফল',
       'কাস্টমার সফলভাবে যোগ হয়েছে',
     );
+    return true;
   }
 
   Future<void> updateCustomer(Customer customer) async {
@@ -145,15 +173,24 @@ class CustomerController extends GetxController {
       return null;
     }
 
-    final lowerName = trimmedName.toLowerCase();
-    final cachedCustomer = _findCustomerInCacheByName(lowerName);
-    if (cachedCustomer != null) {
-      return cachedCustomer;
+    final normalizedName = _normalizeName(trimmedName);
+    for (final customer in customers) {
+      if (_normalizeName(customer.name) == normalizedName) {
+        return customer;
+      }
     }
 
-    await loadCustomers();
+    final repositoryCustomer =
+        await _repository.getCustomerByNameInsensitive(trimmedName);
+    if (repositoryCustomer == null) {
+      return null;
+    }
 
-    return _findCustomerInCacheByName(lowerName);
+    if (_normalizeName(repositoryCustomer.name) != normalizedName) {
+      return null;
+    }
+
+    return repositoryCustomer;
   }
 
   Future<Customer> createCustomerSilently(String name) async {
@@ -193,4 +230,199 @@ class CustomerController extends GetxController {
       snackPosition: SnackPosition.BOTTOM,
     );
   }
+
+  Future<bool> _ensureNoDuplicateOrWarn(String name) async {
+    final normalizedTarget = _normalizeName(name);
+    final existingCustomer = await findCustomerByName(name);
+    if (existingCustomer != null) {
+      _showWarning(
+        'ডুপ্লিকেট কাস্টমার',
+        'এই নামে একটি কাস্টমার ইতিমধ্যেই রয়েছে।',
+      );
+      return false;
+    }
+
+    final similarCustomers = await _findSimilarCustomers(normalizedTarget);
+    if (similarCustomers.isEmpty || !_enableFeedback) {
+      return true;
+    }
+
+    final shouldProceed = await Get.dialog<bool>(
+          AlertDialog(
+            title: const Text('সতর্কতা'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('"$name" এর সাথে মিল থাকা কাস্টমার পাওয়া গেছে।'),
+                const SizedBox(height: 12),
+                ...similarCustomers
+                    .map((customer) => Text('• ${customer.name}')),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('বাতিল'),
+              ),
+              ElevatedButton(
+                onPressed: () => Get.back(result: true),
+                child: const Text('তবুও যোগ করুন'),
+              ),
+            ],
+          ),
+          barrierDismissible: false,
+        ) ??
+        false;
+
+    if (!shouldProceed) {
+      _showWarning(
+        'বাতিল',
+        'কাস্টমার তৈরি বাতিল করা হয়েছে।',
+      );
+    }
+
+    return shouldProceed;
+  }
+
+  Future<List<Customer>> _findSimilarCustomers(String normalizedTarget) async {
+    final customersSnapshot = customers.toList(growable: false);
+    if (customersSnapshot.isEmpty) {
+      return const [];
+    }
+
+    final serializedCustomers = List<Map<String, Object?>>.generate(
+      customersSnapshot.length,
+      (index) => {
+        'index': index,
+        'name': customersSnapshot[index].name,
+      },
+      growable: false,
+    );
+
+    final similarIndexes = await compute(
+      _computeSimilarCustomerIndexes,
+      {
+        'customers': serializedCustomers,
+        'normalizedTarget': normalizedTarget,
+      },
+    );
+
+    if (similarIndexes.isEmpty) {
+      return const [];
+    }
+
+    return similarIndexes
+        .map((index) => customersSnapshot[index])
+        .toList(growable: false);
+  }
+
+  static String _normalizeName(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll(_whitespaceRegex, ' ')
+        .replaceAll(_nonAlphaNumericRegex, '')
+        .trim();
+  }
+
+  static double _stringSimilarity(String a, String b) {
+    if (a.isEmpty || b.isEmpty) {
+      return 0;
+    }
+    final distance = _levenshteinDistance(a, b);
+    final maxLength = max(a.length, b.length);
+    if (maxLength == 0) {
+      return 1;
+    }
+    return 1 - (distance / maxLength);
+  }
+
+  static int _levenshteinDistance(String a, String b) {
+    if (identical(a, b)) {
+      return 0;
+    }
+    if (a.isEmpty) {
+      return b.length;
+    }
+    if (b.isEmpty) {
+      return a.length;
+    }
+
+    if (a.length < b.length) {
+      final temp = a;
+      a = b;
+      b = temp;
+    }
+
+    var previousRow = List<int>.generate(b.length + 1, (index) => index);
+
+    for (var i = 0; i < a.length; i++) {
+      final currentRow = List<int>.filled(b.length + 1, 0);
+      currentRow[0] = i + 1;
+      for (var j = 0; j < b.length; j++) {
+        final cost = a.codeUnitAt(i) == b.codeUnitAt(j) ? 0 : 1;
+        currentRow[j + 1] = min(
+          min(currentRow[j] + 1, previousRow[j + 1] + 1),
+          previousRow[j] + cost,
+        );
+      }
+      previousRow = currentRow;
+    }
+
+    return previousRow.last;
+  }
+
+  void _showWarning(String title, String message) {
+    if (!_enableFeedback || Get.testMode) {
+      return;
+    }
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.orange.shade700,
+      colorText: Colors.white,
+    );
+  }
+
+  String? _sanitizeOptionalField(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+}
+
+List<int> _computeSimilarCustomerIndexes(Map<String, Object?> input) {
+  final customersData = (input['customers'] as List).cast<Map<String, Object?>>();
+  final normalizedTarget = input['normalizedTarget'] as String;
+
+  final similarIndexes = <int>[];
+
+  for (final customerData in customersData) {
+    final index = customerData['index'] as int;
+    final normalizedName = CustomerController._normalizeName(
+      customerData['name'] as String,
+    );
+
+    if (normalizedName == normalizedTarget) {
+      continue;
+    }
+    if (normalizedName.contains(normalizedTarget) ||
+        normalizedTarget.contains(normalizedName)) {
+      similarIndexes.add(index);
+      continue;
+    }
+
+    final similarity = CustomerController._stringSimilarity(
+      normalizedName,
+      normalizedTarget,
+    );
+    if (similarity >= 0.8) {
+      similarIndexes.add(index);
+    }
+  }
+
+  return similarIndexes;
 }
