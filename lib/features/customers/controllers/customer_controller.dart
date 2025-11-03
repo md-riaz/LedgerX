@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,12 +27,7 @@ class CustomerController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   Customer? getCustomerFromCache(int id) {
-    for (final customer in customers) {
-      if (customer.id == id) {
-        return customer;
-      }
-    }
-    return null;
+    return customers.firstWhereOrNull((customer) => customer.id == id);
   }
 
   @override
@@ -79,9 +75,15 @@ class CustomerController extends GetxController {
       return false;
     }
 
-    final newCustomerId = await _repository.createCustomer(sanitizedCustomer);
-    final createdCustomer = await _repository.getCustomerById(newCustomerId) ??
-        sanitizedCustomer.copyWith(id: newCustomerId);
+    Customer createdCustomer;
+    try {
+      final newCustomerId = await _repository.createCustomer(sanitizedCustomer);
+      createdCustomer = await _repository.getCustomerById(newCustomerId) ??
+          sanitizedCustomer.copyWith(id: newCustomerId);
+    } catch (e) {
+      _showWarning('ত্রুটি', 'কাস্টমার যোগ করতে ব্যর্থ হয়েছে।');
+      return false;
+    }
 
     customers.add(createdCustomer);
     customers.sort(
@@ -293,7 +295,7 @@ class CustomerController extends GetxController {
       customersSnapshot.length,
       (index) => {
         'index': index,
-        'normalizedName': _normalizeName(customersSnapshot[index].name),
+        'name': customersSnapshot[index].name,
       },
       growable: false,
     );
@@ -400,7 +402,9 @@ List<int> _computeSimilarCustomerIndexes(Map<String, Object?> input) {
 
   for (final customerData in customersData) {
     final index = customerData['index'] as int;
-    final normalizedName = customerData['normalizedName'] as String;
+    final normalizedName = CustomerController._normalizeName(
+      customerData['name'] as String,
+    );
 
     if (normalizedName == normalizedTarget) {
       continue;
