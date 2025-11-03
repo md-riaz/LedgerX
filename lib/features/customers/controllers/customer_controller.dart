@@ -289,13 +289,30 @@ class CustomerController extends GetxController {
       return const [];
     }
 
-    return compute(
-      _computeSimilarCustomers,
-      _SimilarityComputeInput(
-        customers: customersSnapshot,
-        normalizedTarget: normalizedTarget,
-      ),
+    final serializedCustomers = List<Map<String, Object?>>.generate(
+      customersSnapshot.length,
+      (index) => {
+        'index': index,
+        'normalizedName': _normalizeName(customersSnapshot[index].name),
+      },
+      growable: false,
     );
+
+    final similarIndexes = await compute(
+      _computeSimilarCustomerIndexes,
+      {
+        'customers': serializedCustomers,
+        'normalizedTarget': normalizedTarget,
+      },
+    );
+
+    if (similarIndexes.isEmpty) {
+      return const [];
+    }
+
+    return similarIndexes
+        .map((index) => customersSnapshot[index])
+        .toList(growable: false);
   }
 
   static String _normalizeName(String value) {
@@ -375,30 +392,33 @@ class CustomerController extends GetxController {
   }
 }
 
-class _SimilarityComputeInput {
-  const _SimilarityComputeInput({
-    required this.customers,
-    required this.normalizedTarget,
-  });
+List<int> _computeSimilarCustomerIndexes(Map<String, Object?> input) {
+  final customersData = (input['customers'] as List).cast<Map<String, Object?>>();
+  final normalizedTarget = input['normalizedTarget'] as String;
 
-  final List<Customer> customers;
-  final String normalizedTarget;
-}
+  final similarIndexes = <int>[];
 
-List<Customer> _computeSimilarCustomers(_SimilarityComputeInput input) {
-  return input.customers.where((customer) {
-    final normalizedName = CustomerController._normalizeName(customer.name);
-    if (normalizedName == input.normalizedTarget) {
-      return false;
+  for (final customerData in customersData) {
+    final index = customerData['index'] as int;
+    final normalizedName = customerData['normalizedName'] as String;
+
+    if (normalizedName == normalizedTarget) {
+      continue;
     }
-    if (normalizedName.contains(input.normalizedTarget) ||
-        input.normalizedTarget.contains(normalizedName)) {
-      return true;
+    if (normalizedName.contains(normalizedTarget) ||
+        normalizedTarget.contains(normalizedName)) {
+      similarIndexes.add(index);
+      continue;
     }
-    return CustomerController._stringSimilarity(
-          normalizedName,
-          input.normalizedTarget,
-        ) >=
-        0.8;
-  }).toList(growable: false);
+
+    final similarity = CustomerController._stringSimilarity(
+      normalizedName,
+      normalizedTarget,
+    );
+    if (similarity >= 0.8) {
+      similarIndexes.add(index);
+    }
+  }
+
+  return similarIndexes;
 }
