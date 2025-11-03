@@ -33,6 +33,24 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<Customer?> getCustomerByNameInsensitive(String name) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      return null;
+    }
+
+    final row = await (_db.select(_db.dbCustomers)
+          ..where(
+            (tbl) =>
+                tbl.name.collate(Collate.noCase).equals(trimmedName),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+
+    return row == null ? null : _mapCustomer(row);
+  }
+
+  @override
   Future<int> createCustomer(Customer customer) async {
     final id = await _db.into(_db.dbCustomers).insert(
           DbCustomersCompanion.insert(

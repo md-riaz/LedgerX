@@ -81,6 +81,29 @@ void main() {
 
       expect(duplicated, isFalse);
       expect(controller.customers.length, 1);
+
+      final whitespaceVariant = await controller.createCustomer(
+        Customer(name: 'Duplicate   '),
+        closeAfterCreate: false,
+      );
+
+      expect(whitespaceVariant, isFalse);
+      expect(controller.customers.length, 1);
+
+      final bengaliCustomer = await controller.createCustomer(
+        Customer(name: 'এবিসি  ট্রেডার্স'),
+        closeAfterCreate: false,
+      );
+      expect(bengaliCustomer, isTrue);
+      expect(controller.customers.length, 2);
+
+      final normalizedBengali = await controller.createCustomer(
+        Customer(name: 'এবিসি ট্রেডার্স'),
+        closeAfterCreate: false,
+      );
+
+      expect(normalizedBengali, isFalse);
+      expect(controller.customers.length, 2);
     });
 
     test('search and silent creation reuse cached data', () async {

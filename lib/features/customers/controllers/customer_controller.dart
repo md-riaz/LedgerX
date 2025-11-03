@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
@@ -16,16 +17,14 @@ class CustomerController extends GetxController {
   final CustomerRepositoryImpl _repository;
   final bool _enableFeedback;
 
+  static final RegExp _whitespaceRegex = RegExp(r'\s+');
+  static final RegExp _nonAlphaNumericRegex =
+      RegExp(r'[^a-z0-9\u0980-\u09FF ]');
+
   final RxList<Customer> customers = <Customer>[].obs;
   final RxList<Customer> filteredCustomers = <Customer>[].obs;
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
-
-  Customer? _findCustomerInCacheByName(String lowerName) {
-    return customers.firstWhereOrNull(
-      (customer) => customer.name.toLowerCase() == lowerName,
-    );
-  }
 
   Customer? getCustomerFromCache(int id) {
     return customers.firstWhereOrNull((customer) => customer.id == id);
@@ -169,15 +168,25 @@ class CustomerController extends GetxController {
       return null;
     }
 
-    final lowerName = trimmedName.toLowerCase();
-    final cachedCustomer = _findCustomerInCacheByName(lowerName);
+    final normalizedName = _normalizeName(trimmedName);
+    final cachedCustomer = customers.firstWhereOrNull(
+      (customer) => _normalizeName(customer.name) == normalizedName,
+    );
     if (cachedCustomer != null) {
       return cachedCustomer;
     }
 
-    await loadCustomers();
+    final repositoryCustomer =
+        await _repository.getCustomerByNameInsensitive(trimmedName);
+    if (repositoryCustomer == null) {
+      return null;
+    }
 
-    return _findCustomerInCacheByName(lowerName);
+    if (_normalizeName(repositoryCustomer.name) != normalizedName) {
+      return null;
+    }
+
+    return repositoryCustomer;
   }
 
   Future<Customer> createCustomerSilently(String name) async {
@@ -219,6 +228,7 @@ class CustomerController extends GetxController {
   }
 
   Future<bool> _ensureNoDuplicateOrWarn(String name) async {
+    final normalizedTarget = _normalizeName(name);
     final existingCustomer = await findCustomerByName(name);
     if (existingCustomer != null) {
       _showWarning(
@@ -228,7 +238,7 @@ class CustomerController extends GetxController {
       return false;
     }
 
-    final similarCustomers = _findSimilarCustomers(name);
+    final similarCustomers = await _findSimilarCustomers(normalizedTarget);
     if (similarCustomers.isEmpty || !_enableFeedback) {
       return true;
     }
@@ -271,31 +281,30 @@ class CustomerController extends GetxController {
     return shouldProceed;
   }
 
-  List<Customer> _findSimilarCustomers(String name) {
-    final normalizedTarget = _normalizeName(name);
+  Future<List<Customer>> _findSimilarCustomers(String normalizedTarget) async {
+    final customersSnapshot = customers.toList(growable: false);
+    if (customersSnapshot.isEmpty) {
+      return const [];
+    }
 
-    return customers.where((customer) {
-      final normalizedName = _normalizeName(customer.name);
-      if (normalizedName == normalizedTarget) {
-        return false;
-      }
-      if (normalizedName.contains(normalizedTarget) ||
-          normalizedTarget.contains(normalizedName)) {
-        return true;
-      }
-      return _stringSimilarity(normalizedName, normalizedTarget) >= 0.8;
-    }).toList();
+    return compute(
+      _computeSimilarCustomers,
+      _SimilarityComputeInput(
+        customers: customersSnapshot,
+        normalizedTarget: normalizedTarget,
+      ),
+    );
   }
 
-  String _normalizeName(String value) {
+  static String _normalizeName(String value) {
     return value
         .toLowerCase()
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(RegExp(r'[^a-z0-9\u0980-\u09FF ]'), '')
+        .replaceAll(_whitespaceRegex, ' ')
+        .replaceAll(_nonAlphaNumericRegex, '')
         .trim();
   }
 
-  double _stringSimilarity(String a, String b) {
+  static double _stringSimilarity(String a, String b) {
     if (a.isEmpty || b.isEmpty) {
       return 0;
     }
@@ -307,29 +316,39 @@ class CustomerController extends GetxController {
     return 1 - (distance / maxLength);
   }
 
-  int _levenshteinDistance(String a, String b) {
-    final rows = a.length + 1;
-    final cols = b.length + 1;
-    final matrix = List.generate(rows, (_) => List<int>.filled(cols, 0));
-
-    for (var i = 0; i < rows; i++) {
-      matrix[i][0] = i;
+  static int _levenshteinDistance(String a, String b) {
+    if (identical(a, b)) {
+      return 0;
     }
-    for (var j = 0; j < cols; j++) {
-      matrix[0][j] = j;
+    if (a.isEmpty) {
+      return b.length;
+    }
+    if (b.isEmpty) {
+      return a.length;
     }
 
-    for (var i = 1; i < rows; i++) {
-      for (var j = 1; j < cols; j++) {
-        final cost = a[i - 1] == b[j - 1] ? 0 : 1;
-        matrix[i][j] = min(
-          min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1),
-          matrix[i - 1][j - 1] + cost,
+    if (a.length < b.length) {
+      final temp = a;
+      a = b;
+      b = temp;
+    }
+
+    var previousRow = List<int>.generate(b.length + 1, (index) => index);
+
+    for (var i = 0; i < a.length; i++) {
+      final currentRow = List<int>.filled(b.length + 1, 0);
+      currentRow[0] = i + 1;
+      for (var j = 0; j < b.length; j++) {
+        final cost = a.codeUnitAt(i) == b.codeUnitAt(j) ? 0 : 1;
+        currentRow[j + 1] = min(
+          min(currentRow[j] + 1, previousRow[j + 1] + 1),
+          previousRow[j] + cost,
         );
       }
+      previousRow = currentRow;
     }
 
-    return matrix[rows - 1][cols - 1];
+    return previousRow.last;
   }
 
   void _showWarning(String title, String message) {
@@ -352,4 +371,32 @@ class CustomerController extends GetxController {
     }
     return trimmed;
   }
+}
+
+class _SimilarityComputeInput {
+  const _SimilarityComputeInput({
+    required this.customers,
+    required this.normalizedTarget,
+  });
+
+  final List<Customer> customers;
+  final String normalizedTarget;
+}
+
+List<Customer> _computeSimilarCustomers(_SimilarityComputeInput input) {
+  return input.customers.where((customer) {
+    final normalizedName = CustomerController._normalizeName(customer.name);
+    if (normalizedName == input.normalizedTarget) {
+      return false;
+    }
+    if (normalizedName.contains(input.normalizedTarget) ||
+        input.normalizedTarget.contains(normalizedName)) {
+      return true;
+    }
+    return CustomerController._stringSimilarity(
+          normalizedName,
+          input.normalizedTarget,
+        ) >=
+        0.8;
+  }).toList(growable: false);
 }
