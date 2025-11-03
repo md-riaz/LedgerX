@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:csv/csv.dart';
@@ -35,78 +36,107 @@ class CustomerListPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'কাস্টমার সার্চ করুন...',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: controller.searchCustomers,
-            ),
-          ),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          const maxContentWidth = 900.0;
+          final horizontalPadding = math.max(
+            16.0,
+            (constraints.maxWidth - maxContentWidth) / 2,
+          );
 
-              if (controller.filteredCustomers.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'কোনো কাস্টমার পাওয়া যায়নি',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                itemCount: controller.filteredCustomers.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) {
-                  final customer = controller.filteredCustomers[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text(customer.name[0].toUpperCase()),
-                      ),
-                      title: Text(customer.name),
-                      subtitle: Text(
-                        customer.phone ??
-                            customer.address ??
-                            customer.notes ??
-                            'অতিরিক্ত তথ্য নেই',
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () =>
-                            _confirmDelete(context, controller, customer),
-                      ),
-                      onTap: () =>
-                          _showCustomerDetails(context, controller, customer),
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  24,
+                  horizontalPadding,
+                  8,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'কাস্টমার সার্চ করুন...',
+                      prefixIcon: Icon(Icons.search),
                     ),
+                    onChanged: controller.searchCustomers,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (controller.filteredCustomers.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'কোনো কাস্টমার পাওয়া যায়নি',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: controller.filteredCustomers.length,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      24,
+                    ),
+                    itemBuilder: (context, index) {
+                      final customer = controller.filteredCustomers[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            child: Text(customer.name[0].toUpperCase()),
+                          ),
+                          title: Text(customer.name),
+                          subtitle: Text(
+                            customer.phone ??
+                                customer.address ??
+                                customer.notes ??
+                                'অতিরিক্ত তথ্য নেই',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () =>
+                                _confirmDelete(context, controller, customer),
+                          ),
+                          onTap: () => _showCustomerDetails(
+                            context,
+                            controller,
+                            customer,
+                          ),
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            }),
-          ),
-        ],
+                }),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCustomerDialog(context, controller),
@@ -172,21 +202,40 @@ class CustomerListPage extends StatelessWidget {
           TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                final customer = Customer(
-                  name: nameController.text,
-                  phone: phoneController.text.isEmpty
-                      ? null
-                      : phoneController.text,
-                  address: addressController.text.isEmpty
-                      ? null
-                      : addressController.text,
-                  notes: notesController.text.isEmpty
-                      ? null
-                      : notesController.text,
+              final colorScheme = Theme.of(context).colorScheme;
+              final name = nameController.text.trim();
+
+              if (name.isEmpty) {
+                Get.snackbar(
+                  'নাম প্রয়োজন',
+                  'কাস্টমারের নাম লিখুন',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: colorScheme.error,
+                  colorText: colorScheme.onError,
                 );
-                await controller.createCustomer(customer);
+                return;
               }
+
+              final customer = Customer(
+                name: name,
+                phone: phoneController.text.trim().isEmpty
+                    ? null
+                    : phoneController.text.trim(),
+                address: addressController.text.trim().isEmpty
+                    ? null
+                    : addressController.text.trim(),
+                notes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
+              );
+
+              await controller.createCustomer(customer);
+              Get.back();
+              Get.snackbar(
+                'সফল',
+                'কাস্টমার যোগ হয়েছে',
+                snackPosition: SnackPosition.BOTTOM,
+              );
             },
             child: const Text('যোগ করুন'),
           ),
