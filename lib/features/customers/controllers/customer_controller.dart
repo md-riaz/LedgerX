@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -27,7 +26,12 @@ class CustomerController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   Customer? getCustomerFromCache(int id) {
-    return customers.firstWhereOrNull((customer) => customer.id == id);
+    for (final customer in customers) {
+      if (customer.id == id) {
+        return customer;
+      }
+    }
+    return null;
   }
 
   @override
@@ -76,9 +80,8 @@ class CustomerController extends GetxController {
     }
 
     final newCustomerId = await _repository.createCustomer(sanitizedCustomer);
-    final createdCustomer =
-        await _repository.getCustomerById(newCustomerId) ??
-            sanitizedCustomer.copyWith(id: newCustomerId);
+    final createdCustomer = await _repository.getCustomerById(newCustomerId) ??
+        sanitizedCustomer.copyWith(id: newCustomerId);
 
     customers.add(createdCustomer);
     customers.sort(
@@ -169,11 +172,10 @@ class CustomerController extends GetxController {
     }
 
     final normalizedName = _normalizeName(trimmedName);
-    final cachedCustomer = customers.firstWhereOrNull(
-      (customer) => _normalizeName(customer.name) == normalizedName,
-    );
-    if (cachedCustomer != null) {
-      return cachedCustomer;
+    for (final customer in customers) {
+      if (_normalizeName(customer.name) == normalizedName) {
+        return customer;
+      }
     }
 
     final repositoryCustomer =

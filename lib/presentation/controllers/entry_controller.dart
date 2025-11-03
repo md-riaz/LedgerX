@@ -49,8 +49,8 @@ class EntryController extends GetxController {
 
   Future<void> createEntry(Entry entry, {bool closeAfterCreate = true}) async {
     final newEntryId = await _repository.createEntry(entry);
-    final createdEntry =
-        await _repository.getEntryById(newEntryId) ?? entry.copyWith(id: newEntryId);
+    final createdEntry = await _repository.getEntryById(newEntryId) ??
+        entry.copyWith(id: newEntryId);
 
     if (selectedCustomerId.value == null ||
         selectedCustomerId.value == createdEntry.customerId) {
@@ -72,9 +72,8 @@ class EntryController extends GetxController {
 
   Future<void> updateEntry(Entry entry) async {
     await _repository.updateEntry(entry);
-    final updatedEntry = entry.id == null
-        ? null
-        : await _repository.getEntryById(entry.id!);
+    final updatedEntry =
+        entry.id == null ? null : await _repository.getEntryById(entry.id!);
 
     if (updatedEntry != null) {
       final matchesFilter = selectedCustomerId.value == null ||
@@ -156,6 +155,8 @@ class EntryController extends GetxController {
       message,
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
   void _calculateTotals() {
     var credit = 0.0;
     var debit = 0.0;
