@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/repositories/customer_repository_impl.dart';
 import 'package:ledgerx/domain/entities/customer.dart';
@@ -49,14 +52,34 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> createCustomer(
+  Future<bool> createCustomer(
     Customer customer, {
     bool closeAfterCreate = true,
   }) async {
-    final newCustomerId = await _repository.createCustomer(customer);
+    final sanitizedCustomer = Customer(
+      id: customer.id,
+      name: customer.name.trim(),
+      phone: _sanitizeOptionalField(customer.phone),
+      address: _sanitizeOptionalField(customer.address),
+      notes: _sanitizeOptionalField(customer.notes),
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt,
+    );
+
+    if (sanitizedCustomer.name.isEmpty) {
+      _showWarning('ত্রুটি', 'কাস্টমারের নাম লিখুন');
+      return false;
+    }
+
+    final canProceed = await _ensureNoDuplicateOrWarn(sanitizedCustomer.name);
+    if (!canProceed) {
+      return false;
+    }
+
+    final newCustomerId = await _repository.createCustomer(sanitizedCustomer);
     final createdCustomer =
         await _repository.getCustomerById(newCustomerId) ??
-            customer.copyWith(id: newCustomerId);
+            sanitizedCustomer.copyWith(id: newCustomerId);
 
     customers.add(createdCustomer);
     customers.sort(
@@ -72,6 +95,7 @@ class CustomerController extends GetxController {
       'সফল',
       'কাস্টমার সফলভাবে যোগ হয়েছে',
     );
+    return true;
   }
 
   Future<void> updateCustomer(Customer customer) async {
@@ -192,5 +216,140 @@ class CustomerController extends GetxController {
       message,
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  Future<bool> _ensureNoDuplicateOrWarn(String name) async {
+    final existingCustomer = await findCustomerByName(name);
+    if (existingCustomer != null) {
+      _showWarning(
+        'ডুপ্লিকেট কাস্টমার',
+        'এই নামে একটি কাস্টমার ইতিমধ্যেই রয়েছে।',
+      );
+      return false;
+    }
+
+    final similarCustomers = _findSimilarCustomers(name);
+    if (similarCustomers.isEmpty || !_enableFeedback) {
+      return true;
+    }
+
+    final shouldProceed = await Get.dialog<bool>(
+          AlertDialog(
+            title: const Text('সতর্কতা'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('"$name" এর সাথে মিল থাকা কাস্টমার পাওয়া গেছে।'),
+                const SizedBox(height: 12),
+                ...similarCustomers
+                    .map((customer) => Text('• ${customer.name}')),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('বাতিল'),
+              ),
+              ElevatedButton(
+                onPressed: () => Get.back(result: true),
+                child: const Text('তবুও যোগ করুন'),
+              ),
+            ],
+          ),
+          barrierDismissible: false,
+        ) ??
+        false;
+
+    if (!shouldProceed) {
+      _showWarning(
+        'বাতিল',
+        'কাস্টমার তৈরি বাতিল করা হয়েছে।',
+      );
+    }
+
+    return shouldProceed;
+  }
+
+  List<Customer> _findSimilarCustomers(String name) {
+    final normalizedTarget = _normalizeName(name);
+
+    return customers.where((customer) {
+      final normalizedName = _normalizeName(customer.name);
+      if (normalizedName == normalizedTarget) {
+        return false;
+      }
+      if (normalizedName.contains(normalizedTarget) ||
+          normalizedTarget.contains(normalizedName)) {
+        return true;
+      }
+      return _stringSimilarity(normalizedName, normalizedTarget) >= 0.8;
+    }).toList();
+  }
+
+  String _normalizeName(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r'[^a-z0-9\u0980-\u09FF ]'), '')
+        .trim();
+  }
+
+  double _stringSimilarity(String a, String b) {
+    if (a.isEmpty || b.isEmpty) {
+      return 0;
+    }
+    final distance = _levenshteinDistance(a, b);
+    final maxLength = max(a.length, b.length);
+    if (maxLength == 0) {
+      return 1;
+    }
+    return 1 - (distance / maxLength);
+  }
+
+  int _levenshteinDistance(String a, String b) {
+    final rows = a.length + 1;
+    final cols = b.length + 1;
+    final matrix = List.generate(rows, (_) => List<int>.filled(cols, 0));
+
+    for (var i = 0; i < rows; i++) {
+      matrix[i][0] = i;
+    }
+    for (var j = 0; j < cols; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (var i = 1; i < rows; i++) {
+      for (var j = 1; j < cols; j++) {
+        final cost = a[i - 1] == b[j - 1] ? 0 : 1;
+        matrix[i][j] = min(
+          min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1),
+          matrix[i - 1][j - 1] + cost,
+        );
+      }
+    }
+
+    return matrix[rows - 1][cols - 1];
+  }
+
+  void _showWarning(String title, String message) {
+    if (!_enableFeedback || Get.testMode) {
+      return;
+    }
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.orange.shade700,
+      colorText: Colors.white,
+    );
+  }
+
+  String? _sanitizeOptionalField(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
   }
 }

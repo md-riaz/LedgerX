@@ -171,7 +171,7 @@ class CustomerListPage extends StatelessWidget {
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('বাতিল')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.isNotEmpty) {
                 final customer = Customer(
                   name: nameController.text,
@@ -185,7 +185,7 @@ class CustomerListPage extends StatelessWidget {
                       ? null
                       : notesController.text,
                 );
-                controller.createCustomer(customer);
+                await controller.createCustomer(customer);
               }
             },
             child: const Text('যোগ করুন'),

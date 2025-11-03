@@ -46,7 +46,10 @@ void main() {
       final createdAt = DateTime(2024, 1, 1);
       final customer = Customer(name: 'Alice', createdAt: createdAt, updatedAt: createdAt);
 
-      await controller.createCustomer(customer, closeAfterCreate: false);
+      final firstCreated =
+          await controller.createCustomer(customer, closeAfterCreate: false);
+
+      expect(firstCreated, isTrue);
 
       expect(controller.customers.length, 1);
       expect(controller.filteredCustomers.length, 1);
@@ -65,15 +68,33 @@ void main() {
       expect(controller.filteredCustomers, isEmpty);
     });
 
+    test('prevent duplicate customer creation', () async {
+      final customer = Customer(name: 'Duplicate');
+
+      final created =
+          await controller.createCustomer(customer, closeAfterCreate: false);
+      expect(created, isTrue);
+      expect(controller.customers.length, 1);
+
+      final duplicated =
+          await controller.createCustomer(customer, closeAfterCreate: false);
+
+      expect(duplicated, isFalse);
+      expect(controller.customers.length, 1);
+    });
+
     test('search and silent creation reuse cached data', () async {
-      await controller.createCustomer(
+      final bobCreated = await controller.createCustomer(
         Customer(name: 'Bob', phone: '123'),
         closeAfterCreate: false,
       );
-      await controller.createCustomer(
+      final charlieCreated = await controller.createCustomer(
         Customer(name: 'Charlie', notes: 'Friend'),
         closeAfterCreate: false,
       );
+
+      expect(bobCreated, isTrue);
+      expect(charlieCreated, isTrue);
 
       controller.searchCustomers('char');
       expect(controller.filteredCustomers.length, 1);
