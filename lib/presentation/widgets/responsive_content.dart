@@ -14,26 +14,15 @@ class ResponsiveContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth <= maxContentWidth) {
-          return Padding(
-            padding: padding,
-            child: child,
-          );
-        }
-
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxContentWidth),
-            child: Padding(
-              padding: padding,
-              child: child,
-            ),
-          ),
-        );
-      },
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxContentWidth),
+        child: Padding(
+          padding: padding,
+          child: child,
+        ),
+      ),
     );
   }
 }

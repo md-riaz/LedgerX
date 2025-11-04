@@ -14,6 +14,8 @@ import '../themes/app_theme.dart';
 class EntryListPage extends StatelessWidget {
   const EntryListPage({super.key});
 
+  static const double _maxContentWidth = 1000;
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<EntryController>();
@@ -42,10 +44,9 @@ class EntryListPage extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          const maxContentWidth = 1000.0;
           final horizontalPadding = math.max(
             16.0,
-            (constraints.maxWidth - maxContentWidth) / 2,
+            (constraints.maxWidth - _maxContentWidth) / 2,
           );
 
           return Column(
@@ -58,7 +59,9 @@ class EntryListPage extends StatelessWidget {
                   12,
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                  constraints: const BoxConstraints(
+                    maxWidth: _maxContentWidth,
+                  ),
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -566,9 +569,14 @@ void _showAddEntryDialog(
       ],
     ),
   ).whenComplete(() {
+    amountController.dispose();
+    descriptionController.dispose();
+    tagsController.dispose();
     customerNameInput.close();
     selectedCustomer.close();
     selectedCustomerId.close();
+    selectedType.close();
+    selectedDate.close();
     customerFieldController?.dispose();
   });
 }

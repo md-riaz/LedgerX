@@ -16,6 +16,8 @@ import 'package:ledgerx/utils/io_stub.dart'
 class CustomerListPage extends StatelessWidget {
   const CustomerListPage({super.key});
 
+  static const double _maxContentWidth = 900;
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<CustomerController>();
@@ -38,10 +40,9 @@ class CustomerListPage extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          const maxContentWidth = 900.0;
           final horizontalPadding = math.max(
             16.0,
-            (constraints.maxWidth - maxContentWidth) / 2,
+            (constraints.maxWidth - _maxContentWidth) / 2,
           );
 
           return Column(
@@ -54,7 +55,9 @@ class CustomerListPage extends StatelessWidget {
                   8,
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                  constraints: const BoxConstraints(
+                    maxWidth: _maxContentWidth,
+                  ),
                   child: TextField(
                     decoration: const InputDecoration(
                       hintText: 'কাস্টমার সার্চ করুন...',
@@ -216,17 +219,15 @@ class CustomerListPage extends StatelessWidget {
                 return;
               }
 
+              final phoneText = phoneController.text.trim();
+              final addressText = addressController.text.trim();
+              final notesText = notesController.text.trim();
+
               final customer = Customer(
                 name: name,
-                phone: phoneController.text.trim().isEmpty
-                    ? null
-                    : phoneController.text.trim(),
-                address: addressController.text.trim().isEmpty
-                    ? null
-                    : addressController.text.trim(),
-                notes: notesController.text.trim().isEmpty
-                    ? null
-                    : notesController.text.trim(),
+                phone: phoneText.isEmpty ? null : phoneText,
+                address: addressText.isEmpty ? null : addressText,
+                notes: notesText.isEmpty ? null : notesText,
               );
 
               await controller.createCustomer(customer);

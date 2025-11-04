@@ -10,6 +10,13 @@ import '../widgets/responsive_content.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  static const double _dashboardContentMaxWidth = 1320;
+  static const double _dashboardGridSpacing = 16;
+  static const double _dashboardCardHeight = 150;
+  static const double _tabletBreakpoint = 600;
+  static const double _desktopBreakpoint = 900;
+  static const double _largeDesktopBreakpoint = 1200;
+
   static final NumberFormat _currencyFormatter = NumberFormat.currency(
     locale: 'bn_BD',
     symbol: '৳',
@@ -42,6 +49,7 @@ class HomePage extends StatelessWidget {
         },
         child: SingleChildScrollView(
           child: ResponsiveContent(
+            maxContentWidth: _dashboardContentMaxWidth,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -59,10 +67,12 @@ class HomePage extends StatelessWidget {
                         constraints.maxWidth,
                       );
                       final availableWidth = constraints.maxWidth -
-                          (crossAxisCount - 1) * 16;
-                      final itemWidth = availableWidth / crossAxisCount;
-                      const desiredHeight = 150.0;
-                      final aspectRatio = itemWidth / desiredHeight;
+                          (crossAxisCount - 1) * _dashboardGridSpacing;
+                      final itemWidth = (availableWidth > 0
+                              ? availableWidth
+                              : constraints.maxWidth) /
+                          crossAxisCount;
+                      final aspectRatio = itemWidth / _dashboardCardHeight;
 
                       final dashboardCards = [
                         DashboardCard(
@@ -107,8 +117,8 @@ class HomePage extends StatelessWidget {
                         gridDelegate:
                             SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
+                          mainAxisSpacing: _dashboardGridSpacing,
+                          crossAxisSpacing: _dashboardGridSpacing,
                           childAspectRatio: aspectRatio,
                         ),
                         itemBuilder: (context, index) =>
@@ -180,13 +190,13 @@ class HomePage extends StatelessWidget {
   }
 
   int _calculateDashboardColumns(double maxWidth) {
-    if (maxWidth >= 1200) {
+    if (maxWidth >= _largeDesktopBreakpoint) {
       return 4;
     }
-    if (maxWidth >= 900) {
+    if (maxWidth >= _desktopBreakpoint) {
       return 3;
     }
-    if (maxWidth >= 600) {
+    if (maxWidth >= _tabletBreakpoint) {
       return 2;
     }
     return 1;
