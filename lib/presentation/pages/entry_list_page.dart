@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +13,8 @@ import '../themes/app_theme.dart';
 
 class EntryListPage extends StatelessWidget {
   const EntryListPage({super.key});
+
+  static const double _maxContentWidth = 1000;
 
   @override
   Widget build(BuildContext context) {
@@ -38,174 +42,223 @@ class EntryListPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'এন্ট্রি সার্চ করুন...',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  onChanged: controller.searchEntries,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = math.max(
+            16.0,
+            (constraints.maxWidth - _maxContentWidth) / 2,
+          );
+
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  24,
+                  horizontalPadding,
+                  12,
                 ),
-                const SizedBox(height: 8),
-                Obx(() {
-                  if (controller.selectedCustomerId.value != null) {
-                    return FutureBuilder<double>(
-                      future: controller.getBalance(
-                        controller.selectedCustomerId.value!,
-                      ),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final balance = snapshot.data!;
-                          final isReceivable = balance >= 0;
-                          final statusLabel = isReceivable ? 'গ্রাহকের কাছ থেকে পাওনা' : 'গ্রাহককে দিতে হবে';
-                          final amountLabel = '${isReceivable ? 'পাওনা' : 'দেনা'}: ৳${balance.abs().toStringAsFixed(2)}';
-                          final helperText = isReceivable ? 'এই পরিমাণ গ্রাহকের কাছ থেকে গ্রহণযোগ্য।' : 'এই পরিমাণ গ্রাহককে প্রদান করতে হবে。';
-
-                          return Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    statusLabel,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    amountLabel,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: isReceivable
-                                          ? AppTheme.creditColor
-                                          : AppTheme.debitColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    helperText,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (controller.filteredEntries.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'কোনো এন্ট্রি পাওয়া যায়নি',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                    ],
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: _maxContentWidth,
                   ),
-                );
-              }
-
-              return ListView.builder(
-                itemCount: controller.filteredEntries.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) {
-                  final entry = controller.filteredEntries[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: entry.type == EntryType.credit
-                            ? AppTheme.creditColor
-                            : AppTheme.debitColor,
-                        child: Icon(
-                          entry.type == EntryType.credit
-                              ? Icons.add
-                              : Icons.remove,
-                          color: Colors.white,
-                        ),
-                      ),
-                      title: Text(
-                        '৳${entry.amount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: entry.type == EntryType.credit
-                              ? AppTheme.creditColor
-                              : AppTheme.debitColor,
-                        ),
-                      ),
-                      subtitle: Column(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (entry.description != null)
-                            Text(entry.description!),
-                          Text(
-                            DateFormat('MMM dd, yyyy').format(entry.date),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          if (entry.tags.isNotEmpty)
-                            Wrap(
-                              spacing: 4,
-                              children: entry.tags
-                                  .map(
-                                    (tag) => Chip(
-                                      label: Text(
-                                        tag,
-                                        style: const TextStyle(fontSize: 10),
-                                      ),
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                  )
-                                  .toList(),
+                          TextField(
+                            decoration: const InputDecoration(
+                              hintText: 'এন্ট্রি সার্চ করুন...',
+                              prefixIcon: Icon(Icons.search),
                             ),
+                            onChanged: controller.searchEntries,
+                          ),
+                          const SizedBox(height: 12),
+                          Obx(() {
+                            if (controller.selectedCustomerId.value != null) {
+                              return FutureBuilder<double>(
+                                future: controller.getBalance(
+                                  controller.selectedCustomerId.value!,
+                                ),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final balance = snapshot.data!;
+                                    final isReceivable = balance >= 0;
+                                    final statusLabel = isReceivable
+                                        ? 'গ্রাহকের কাছ থেকে পাওনা'
+                                        : 'গ্রাহককে দিতে হবে';
+                                    final amountLabel =
+                                        '${isReceivable ? 'পাওনা' : 'দেনা'}: ৳${balance.abs().toStringAsFixed(2)}';
+                                    final helperText = isReceivable
+                                        ? 'এই পরিমাণ গ্রাহকের কাছ থেকে গ্রহণযোগ্য।'
+                                        : 'এই পরিমাণ গ্রাহককে প্রদান করতে হবে।';
+
+                                    return Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            statusLabel,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            amountLabel,
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: isReceivable
+                                                  ? AppTheme.creditColor
+                                                  : AppTheme.debitColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            helperText,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
                         ],
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () =>
-                            _confirmDelete(context, controller, entry),
-                      ),
-                      onTap: () => _showEntryDetails(context, entry),
                     ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (controller.filteredEntries.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'কোনো এন্ট্রি পাওয়া যায়নি',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: controller.filteredEntries.length,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      24,
+                    ),
+                    itemBuilder: (context, index) {
+                      final entry = controller.filteredEntries[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: entry.type == EntryType.credit
+                                ? AppTheme.creditColor
+                                : AppTheme.debitColor,
+                            child: Icon(
+                              entry.type == EntryType.credit
+                                  ? Icons.add
+                                  : Icons.remove,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text(
+                            '৳${entry.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: entry.type == EntryType.credit
+                                  ? AppTheme.creditColor
+                                  : AppTheme.debitColor,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (entry.description != null)
+                                Text(entry.description!),
+                              Text(
+                                DateFormat('MMM dd, yyyy').format(entry.date),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              if (entry.tags.isNotEmpty)
+                                Wrap(
+                                  spacing: 4,
+                                  children: entry.tags
+                                      .map(
+                                        (tag) => Chip(
+                                          label: Text(
+                                            tag,
+                                            style: const TextStyle(fontSize: 10),
+                                          ),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () =>
+                                _confirmDelete(context, controller, entry),
+                          ),
+                          onTap: () => _showEntryDetails(context, entry),
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            }),
-          ),
-        ],
+                }),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
@@ -487,6 +540,12 @@ void _showAddEntryDialog(
               );
 
               await controller.createEntry(entry);
+              Get.back();
+              Get.snackbar(
+                'সফল',
+                'এন্ট্রি সংরক্ষণ করা হয়েছে',
+                snackPosition: SnackPosition.BOTTOM,
+              );
             } on ArgumentError catch (error) {
               Get.snackbar(
                 'ত্রুটি',
@@ -510,9 +569,14 @@ void _showAddEntryDialog(
       ],
     ),
   ).whenComplete(() {
+    amountController.dispose();
+    descriptionController.dispose();
+    tagsController.dispose();
     customerNameInput.close();
     selectedCustomer.close();
     selectedCustomerId.close();
+    selectedType.close();
+    selectedDate.close();
     customerFieldController?.dispose();
   });
 }

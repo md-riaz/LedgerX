@@ -30,7 +30,7 @@ dependencies:
   
   # CSV Import/Export
   csv: ^6.0.0
-  
+
   # File Picker
   file_picker: ^10.3.3
 
