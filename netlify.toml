@@ -1,3 +1,0 @@
-[build]
-  command = "flutter pub get && flutter build web --wasm --no-wasm-dry-run"
-  publish = "build/web"

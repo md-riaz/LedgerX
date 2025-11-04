@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -27,7 +26,12 @@ class CustomerController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   Customer? getCustomerFromCache(int id) {
-    return customers.firstWhereOrNull((customer) => customer.id == id);
+    for (final customer in customers) {
+      if (customer.id == id) {
+        return customer;
+      }
+    }
+    return null;
   }
 
   @override
