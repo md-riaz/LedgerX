@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class Directory {
   Directory(String path);
 
@@ -24,7 +26,7 @@ class File {
   String readAsStringSync() =>
       throw UnsupportedError('File operations are not supported on the web.');
 
-  Future<List<int>> readAsBytes() async =>
+  Future<Uint8List> readAsBytes() async =>
       throw UnsupportedError('File operations are not supported on the web.');
 
   Future<void> writeAsString(String contents) async =>
