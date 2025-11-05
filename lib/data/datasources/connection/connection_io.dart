@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:ledgerx/utils/io_stub.dart' if (dart.library.io) 'dart:io'
