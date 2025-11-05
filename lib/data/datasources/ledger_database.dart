@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'connection/connection.dart';
 import 'connection/web_backup_stub.dart'
-    if (dart.library.html) 'connection/connection_web.dart' as web_db;
+    if (dart.library.js_interop) 'connection/connection_web.dart' as web_db;
 
 part 'ledger_database.g.dart';
 
