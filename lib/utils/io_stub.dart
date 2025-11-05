@@ -11,6 +11,13 @@ class Directory {
 class File {
   File(String path);
 
+  Future<bool> exists() async => false;
+
+  Future<File> copy(String newPath) async => this;
+
+  Future<File> writeAsBytes(List<int> bytes, {bool flush = false}) async =>
+      this;
+
   Future<String> readAsString() async =>
       throw UnsupportedError('File operations are not supported on the web.');
 
@@ -22,4 +29,6 @@ class File {
 
   Future<void> writeAsString(String contents) async =>
       throw UnsupportedError('File operations are not supported on the web.');
+
+  String get path => '';
 }

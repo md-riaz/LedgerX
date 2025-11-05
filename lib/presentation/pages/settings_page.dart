@@ -1,7 +1,10 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ledgerx/data/datasources/ledger_database.dart';
+import 'package:ledgerx/data/services/backup_service.dart';
+import 'package:ledgerx/features/auth/controllers/auth_controller.dart';
+import 'package:ledgerx/features/customers/controllers/customer_controller.dart';
+import 'package:ledgerx/presentation/controllers/entry_controller.dart';
 import 'package:ledgerx/presentation/controllers/theme_controller.dart';
 import 'package:ledgerx/presentation/pages/audit_logs_page.dart';
 
@@ -119,50 +122,156 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _backupData(BuildContext context) async {
-    try {
-      final dbPath = await LedgerDatabase().resolvedDatabasePath();
+    final messenger = ScaffoldMessenger.of(context);
+    final service = _resolveBackupService();
 
-      Get.snackbar(
-        'ব্যাকআপ',
-        dbPath == null
-            ? 'ওয়েবে IndexedDB এর মাধ্যমে ডেটা রাখা হয়। ওয়েবে ব্যাকআপ/এক্সপোর্ট এখনো তৈরি হয়নি।'
-            : 'ডাটাবেস পথ: $dbPath\nব্যাকআপ ফাংশন এই ফাইলটি আপনার নির্বাচিত স্থানে কপি করবে।',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 5),
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('ডেটা ব্যাকআপ চলছে...'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(minutes: 1),
+      ),
+    );
+
+    try {
+      final savedPath = await service.backupDatabase();
+      messenger.hideCurrentSnackBar();
+
+      if (savedPath == null) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('ব্যাকআপ প্রক্রিয়া বাতিল করা হয়েছে।'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('ব্যাকআপ সম্পন্ন হয়েছে: $savedPath'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } on BackupServiceException catch (e) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('ডেটা ব্যাকআপ করা যায়নি: ${e.message}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
       );
     } catch (e) {
-      Get.snackbar(
-        'ত্রুটি',
-        'ডেটা ব্যাকআপ করা যায়নি: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('ডেটা ব্যাকআপ করা যায়নি: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
       );
     }
   }
 
   Future<void> _restoreData(BuildContext context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['db'],
-      );
+    final messenger = ScaffoldMessenger.of(context);
+    final service = _resolveBackupService();
 
-      if (result != null) {
-        Get.snackbar(
-          'রিস্টোর',
-          'রিস্টোর ফাংশন নির্বাচিত ফাইল দিয়ে বর্তমান ডাটাবেস প্রতিস্থাপন করবে।',
-          snackPosition: SnackPosition.BOTTOM,
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('ডেটা পুনরুদ্ধার চলছে...'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(minutes: 1),
+      ),
+    );
+
+    try {
+      final restored = await service.restoreDatabase();
+      messenger.hideCurrentSnackBar();
+
+      if (!restored) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('রিস্টোর প্রক্রিয়া বাতিল করা হয়েছে।'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 4),
+          ),
         );
+        return;
       }
-    } catch (e) {
-      Get.snackbar(
-        'ত্রুটি',
-        'ডেটা রিস্টোর করা যায়নি: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+
+      await _refreshAfterRestore();
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('ডাটাবেস সফলভাবে পুনরুদ্ধার হয়েছে।'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 6),
+        ),
       );
+    } on BackupServiceException catch (e) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('ডেটা পুনরুদ্ধার ব্যর্থ: ${e.message}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } catch (e) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('ডেটা পুনরুদ্ধার ব্যর্থ: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    }
+  }
+
+  BackupService _resolveBackupService() {
+    if (Get.isRegistered<BackupService>()) {
+      return Get.find<BackupService>();
+    }
+
+    final service = BackupService();
+    Get.put<BackupService>(service);
+    return service;
+  }
+
+  Future<void> _refreshAfterRestore() async {
+    if (Get.isRegistered<LedgerDatabase>()) {
+      Get.delete<LedgerDatabase>(force: true);
+      Get.put<LedgerDatabase>(LedgerDatabase(), permanent: true);
+    }
+
+    if (Get.isRegistered<AuthController>()) {
+      Get.delete<AuthController>(force: true);
+      final authController = Get.put(
+        AuthController(database: LedgerDatabase()),
+        permanent: true,
+      );
+      await authController.restoreSession(force: true);
+    }
+
+    if (Get.isRegistered<CustomerController>()) {
+      Get.delete<CustomerController>(force: true);
+      final customerController = Get.find<CustomerController>();
+      await customerController.loadCustomers();
+    }
+
+    if (Get.isRegistered<EntryController>()) {
+      Get.delete<EntryController>(force: true);
+      final entryController = Get.find<EntryController>();
+      await entryController.loadEntries();
     }
   }
 

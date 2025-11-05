@@ -11,6 +11,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'connection/connection.dart';
+import 'connection/web_backup_stub.dart'
+    if (dart.library.html) 'connection/connection_web.dart' as web_db;
 
 part 'ledger_database.g.dart';
 
@@ -104,7 +106,7 @@ class LedgerDatabase extends _$LedgerDatabase {
   factory LedgerDatabase.forTesting(QueryExecutor executor) =>
       LedgerDatabase._(executor);
 
-  static final LedgerDatabase instance = LedgerDatabase._(_openConnection());
+  static LedgerDatabase instance = LedgerDatabase._(_openConnection());
 
   @override
   int get schemaVersion => 1;
@@ -139,5 +141,70 @@ class LedgerDatabase extends _$LedgerDatabase {
     }
 
     return p.join(docDir.path, 'ledgerx.db');
+  }
+
+  Future<io.File?> databaseFilePath() async {
+    if (kIsWeb) {
+      return null;
+    }
+
+    final resolvedPath = await resolvedDatabasePath();
+    if (resolvedPath == null) {
+      return null;
+    }
+
+    final directory = io.Directory(p.dirname(resolvedPath));
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+
+    return io.File(resolvedPath);
+  }
+
+  Future<Uint8List?> exportDatabaseBytes() async {
+    if (kIsWeb) {
+      return web_db.exportLedgerDatabaseBytes();
+    }
+
+    final file = await databaseFilePath();
+    if (file == null || !await file.exists()) {
+      return null;
+    }
+
+    final bytes = await file.readAsBytes();
+    return Uint8List.fromList(bytes);
+  }
+
+  Future<void> importDatabaseFromBytes(Uint8List bytes) async {
+    if (kIsWeb) {
+      await web_db.importLedgerDatabaseBytes(bytes);
+      return;
+    }
+
+    final file = await databaseFilePath();
+    if (file == null) {
+      throw StateError('No database file available for import.');
+    }
+
+    await file.writeAsBytes(bytes, flush: true);
+  }
+
+  Future<LedgerDatabase> reopen() async {
+    try {
+      await close();
+    } catch (_) {
+      // Ignored: closing an already-closed connection should not block reopen.
+    }
+
+    if (kIsWeb) {
+      final hasSeed = web_db.consumePendingLedgerSeed();
+      if (!hasSeed) {
+        web_db.prepareLedgerDatabaseOpening();
+      }
+    }
+
+    final reopened = LedgerDatabase._(_openConnection());
+    instance = reopened;
+    return reopened;
   }
 }
